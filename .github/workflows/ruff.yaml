@@ -4,9 +4,17 @@ jobs:
   ruff:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/ruff-action@v3
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📝 Run Lint Check
+        uses: astral-sh/ruff-action@v3
         with:
           version: "latest"
-      - run: ruff check
-      - run: ruff format
+          args: "check"
+
+      - name: 🎨 Run Formatting Check
+        uses: astral-sh/ruff-action@v3
+        with:
+          version: "latest"
+          args: "format --check"
