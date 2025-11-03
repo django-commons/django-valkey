@@ -47,7 +47,7 @@ libvalkey = [
     "libvalkey>=4.0.1",
 ]
 lz4 = [
-    "lz4>=4.3.3",
+    "lz4>=4.4.5",
 ]
 pyzstd = [
     "pyzstd>=0.16.2",
