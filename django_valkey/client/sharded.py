@@ -48,6 +48,20 @@ supported methods:
 `sismember()`
 `spop()`
 `smismember()`
+`zadd()`
+`zcard()`
+`zcount()`
+`zincrby()`
+`zpopmax()`
+`zpopmin()`
+`zrange()`
+`zrangebyscore()`
+`zrank()`
+`zrem()`
+`zremrangebyscore()`
+`zrevrange()`
+`zrevrangebyscore()`
+`zscore()`
 """
 
 
