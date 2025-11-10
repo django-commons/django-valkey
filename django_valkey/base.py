@@ -614,6 +614,49 @@ class AsyncBackendCommands:
     async def hexists(self, *args, **kwargs) -> bool:
         return await self.client.hexists(*args, **kwargs)
 
+    # Sorted Set Operations
+    async def zadd(self, *args, **kwargs) -> int:
+        return await self.client.zadd(*args, **kwargs)
+
+    async def zcard(self, *args, **kwargs) -> int:
+        return await self.client.zcard(*args, **kwargs)
+
+    async def zcount(self, *args, **kwargs) -> int:
+        return await self.client.zcount(*args, **kwargs)
+
+    async def zincrby(self, *args, **kwargs) -> float:
+        return await self.client.zincrby(*args, **kwargs)
+
+    async def zpopmax(self, *args, **kwargs):
+        return await self.client.zpopmax(*args, **kwargs)
+
+    async def zpopmin(self, *args, **kwargs):
+        return await self.client.zpopmin(*args, **kwargs)
+
+    async def zrange(self, *args, **kwargs):
+        return await self.client.zrange(*args, **kwargs)
+
+    async def zrangebyscore(self, *args, **kwargs):
+        return await self.client.zrangebyscore(*args, **kwargs)
+
+    async def zrank(self, *args, **kwargs):
+        return await self.client.zrank(*args, **kwargs)
+
+    async def zrem(self, *args, **kwargs) -> int:
+        return await self.client.zrem(*args, **kwargs)
+
+    async def zremrangebyscore(self, *args, **kwargs) -> int:
+        return await self.client.zremrangebyscore(*args, **kwargs)
+
+    async def zrevrange(self, *args, **kwargs):
+        return await self.client.zrevrange(*args, **kwargs)
+
+    async def zrevrangebyscore(self, *args, **kwargs):
+        return await self.client.zrevrangebyscore(*args, **kwargs)
+
+    async def zscore(self, *args, **kwargs):
+        return await self.client.zscore(*args, **kwargs)
+
 
 # temp fix for django's #36047
 # TODO: remove this when it's fixed in django
