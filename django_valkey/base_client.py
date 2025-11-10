@@ -1355,7 +1355,6 @@ class ClientCommands(Generic[Backend]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
-    # Sorted Set Operations
     def zadd(
         self: BaseClient,
         key: KeyT,
@@ -2728,7 +2727,6 @@ class AsyncClientCommands(Generic[Backend]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
-    # Sorted Set Operations
     async def zadd(
         self,
         key: KeyT,

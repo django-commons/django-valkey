@@ -383,7 +383,6 @@ class BackendCommands:
     def hexists(self: BaseValkeyCache, *args, **kwargs) -> bool:
         return self.client.hexists(*args, **kwargs)
 
-    # Sorted Set Operations
     def zadd(self: BaseValkeyCache, *args, **kwargs) -> int:
         return self.client.zadd(*args, **kwargs)
 
@@ -614,7 +613,6 @@ class AsyncBackendCommands:
     async def hexists(self, *args, **kwargs) -> bool:
         return await self.client.hexists(*args, **kwargs)
 
-    # Sorted Set Operations
     async def zadd(self, *args, **kwargs) -> int:
         return await self.client.zadd(*args, **kwargs)
 
