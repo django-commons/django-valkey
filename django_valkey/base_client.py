@@ -1358,7 +1358,7 @@ class ClientCommands(Generic[Backend]):
     # Sorted Set Operations
     def zadd(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         mapping: dict[Any, float],
         nx: bool = False,
         xx: bool = False,
@@ -1370,8 +1370,9 @@ class ClientCommands(Generic[Backend]):
         client: Backend | Any | None = None,
     ) -> int:
         """Add members with scores to sorted set."""
-        client = self._get_client(write=True, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=True, client=client, key=key)
         # Encode members but NOT scores (scores must remain as floats)
         encoded_mapping = {
             self.encode(member): score for member, score in mapping.items()
@@ -1379,7 +1380,7 @@ class ClientCommands(Generic[Backend]):
         try:
             return int(
                 client.zadd(
-                    name,
+                    key,
                     encoded_mapping,  # type: ignore[arg-type]
                     nx=nx,
                     xx=xx,
@@ -1394,63 +1395,67 @@ class ClientCommands(Generic[Backend]):
 
     def zcard(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> int:
         """Get the number of members in sorted set."""
-        client = self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=False, client=client, key=key)
         try:
-            return int(client.zcard(name))
+            return int(client.zcard(key))
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     def zcount(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         min: float | str,  # noqa: A002
         max: float | str,  # noqa: A002
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> int:
         """Count members in sorted set with scores between min and max."""
-        client = self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=False, client=client, key=key)
         try:
-            return int(client.zcount(name, min, max))
+            return int(client.zcount(key, min, max))
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     def zincrby(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         amount: float,
         value: Any,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> float:
         """Increment the score of member in sorted set by amount."""
-        client = self._get_client(write=True, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=True, client=client, key=key)
         value = self.encode(value)
         try:
-            return float(client.zincrby(name, amount, value))
+            return float(client.zincrby(key, amount, value))
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     def zpopmax(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         count: int | None = None,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> tuple[Any, float] | list[tuple[Any, float]] | None:
         """Remove and return members with highest scores."""
-        client = self._get_client(write=True, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=True, client=client, key=key)
         try:
-            result = client.zpopmax(name, count)
+            result = client.zpopmax(key, count)
 
             if not result:
                 return None if count is None else []
@@ -1466,16 +1471,17 @@ class ClientCommands(Generic[Backend]):
 
     def zpopmin(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         count: int | None = None,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> tuple[Any, float] | list[tuple[Any, float]] | None:
         """Remove and return members with lowest scores."""
-        client = self._get_client(write=True, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=True, client=client, key=key)
         try:
-            result = client.zpopmin(name, count)
+            result = client.zpopmin(key, count)
 
             if not result:
                 return None if count is None else []
@@ -1491,7 +1497,7 @@ class ClientCommands(Generic[Backend]):
 
     def zrange(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         start: int,
         end: int,
         desc: bool = False,
@@ -1501,11 +1507,12 @@ class ClientCommands(Generic[Backend]):
         client: Backend | Any | None = None,
     ) -> list[Any] | list[tuple[Any, float]]:
         """Return members in sorted set by index range."""
-        client = self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=False, client=client, key=key)
         try:
             result = client.zrange(
-                name,
+                key,
                 start,
                 end,
                 desc=desc,
@@ -1522,7 +1529,7 @@ class ClientCommands(Generic[Backend]):
 
     def zrangebyscore(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         min: float | str,  # noqa: A002
         max: float | str,  # noqa: A002
         start: int | None = None,
@@ -1533,11 +1540,12 @@ class ClientCommands(Generic[Backend]):
         client: Backend | Any | None = None,
     ) -> list[Any] | list[tuple[Any, float]]:
         """Return members in sorted set by score range."""
-        client = self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=False, client=client, key=key)
         try:
             result = client.zrangebyscore(
-                name,
+                key,
                 min,
                 max,
                 start=start,
@@ -1555,56 +1563,59 @@ class ClientCommands(Generic[Backend]):
 
     def zrank(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         value: Any,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> int | None:
         """Get the rank (index) of member in sorted set, ordered low to high."""
-        client = self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=False, client=client, key=key)
         value = self.encode(value)
         try:
-            rank = client.zrank(name, value)
+            rank = client.zrank(key, value)
             return int(rank) if rank is not None else None
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     def zrem(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         *values: Any,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> int:
         """Remove members from sorted set."""
-        client = self._get_client(write=True, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=True, client=client, key=key)
         encoded_values = [self.encode(value) for value in values]
         try:
-            return int(client.zrem(name, *encoded_values))
+            return int(client.zrem(key, *encoded_values))
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     def zremrangebyscore(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         min: float | str,  # noqa: A002
         max: float | str,  # noqa: A002
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> int:
         """Remove members from sorted set with scores between min and max."""
-        client = self._get_client(write=True, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=True, client=client, key=key)
         try:
-            return int(client.zremrangebyscore(name, min, max))
+            return int(client.zremrangebyscore(key, min, max))
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     def zrevrange(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         start: int,
         end: int,
         withscores: bool = False,
@@ -1613,11 +1624,12 @@ class ClientCommands(Generic[Backend]):
         client: Backend | Any | None = None,
     ) -> list[Any] | list[tuple[Any, float]]:
         """Return members in sorted set by index range, ordered high to low."""
-        client = self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=False, client=client, key=key)
         try:
             result = client.zrevrange(
-                name,
+                key,
                 start,
                 end,
                 withscores=withscores,
@@ -1633,7 +1645,7 @@ class ClientCommands(Generic[Backend]):
 
     def zrevrangebyscore(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         max: float | str,  # noqa: A002
         min: float | str,  # noqa: A002
         start: int | None = None,
@@ -1644,11 +1656,12 @@ class ClientCommands(Generic[Backend]):
         client: Backend | Any | None = None,
     ) -> list[Any] | list[tuple[Any, float]]:
         """Return members in sorted set by score range, ordered high to low."""
-        client = self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=False, client=client, key=key)
         try:
             result = client.zrevrangebyscore(
-                name,
+                key,
                 max,
                 min,
                 start=start,
@@ -1666,17 +1679,18 @@ class ClientCommands(Generic[Backend]):
 
     def zscore(
         self: BaseClient,
-        name: KeyT,
+        key: KeyT,
         value: Any,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> float | None:
         """Get the score of member in sorted set."""
-        client = self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
+        key = self.make_key(key, version=version)
+
+        client = self._get_client(write=False, client=client, key=key)
         value = self.encode(value)
         try:
-            score = client.zscore(name, value)
+            score = client.zscore(key, value)
             return float(score) if score is not None else None
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
@@ -2705,19 +2719,19 @@ class AsyncClientCommands(Generic[Backend]):
         client: Backend | Any | None = None,
     ) -> bool:
         """
-        Return True if key exists in hash name, else False.
+        Return True if key exists in hash key, else False.
         """
         client = await self._get_client(write=False, client=client)
         nkey = self.make_key(key, version=version)
         try:
-            return await client.hexists(name, nkey)
+            return await client.hexists(key, nkey)
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     # Sorted Set Operations
     async def zadd(
         self,
-        name: KeyT,
+        key: KeyT,
         mapping: dict[Any, float],
         nx: bool = False,
         xx: bool = False,
@@ -2729,8 +2743,9 @@ class AsyncClientCommands(Generic[Backend]):
         client: Backend | Any | None = None,
     ) -> int:
         """Add members with scores to sorted set."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=True, client=client)
-        name = self.make_key(name, version=version)
         # Encode members but NOT scores (scores must remain as floats)
         encoded_mapping = {
             self.encode(member): score for member, score in mapping.items()
@@ -2738,7 +2753,7 @@ class AsyncClientCommands(Generic[Backend]):
         try:
             return int(
                 await client.zadd(
-                    name,
+                    key,
                     encoded_mapping,  # type: ignore[arg-type]
                     nx=nx,
                     xx=xx,
@@ -2753,63 +2768,67 @@ class AsyncClientCommands(Generic[Backend]):
 
     async def zcard(
         self,
-        name: KeyT,
+        key: KeyT,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> int:
         """Get the number of members in sorted set."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
         try:
-            return int(await client.zcard(name))
+            return int(await client.zcard(key))
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     async def zcount(
         self,
-        name: KeyT,
+        key: KeyT,
         min: float | str,  # noqa: A002
         max: float | str,  # noqa: A002
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> int:
         """Count members in sorted set with scores between min and max."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
         try:
-            return int(await client.zcount(name, min, max))
+            return int(await client.zcount(key, min, max))
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     async def zincrby(
         self,
-        name: KeyT,
+        key: KeyT,
         amount: float,
         value: Any,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> float:
         """Increment the score of member in sorted set by amount."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=True, client=client)
-        name = self.make_key(name, version=version)
         value = self.encode(value)
         try:
-            return float(await client.zincrby(name, amount, value))
+            return float(await client.zincrby(key, amount, value))
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     async def zpopmax(
         self,
-        name: KeyT,
+        key: KeyT,
         count: int | None = None,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> tuple[Any, float] | list[tuple[Any, float]] | None:
         """Remove and return members with highest scores."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=True, client=client)
-        name = self.make_key(name, version=version)
         try:
-            result = await client.zpopmax(name, count)
+            result = await client.zpopmax(key, count)
 
             if not result:
                 return None if count is None else []
@@ -2825,16 +2844,17 @@ class AsyncClientCommands(Generic[Backend]):
 
     async def zpopmin(
         self,
-        name: KeyT,
+        key: KeyT,
         count: int | None = None,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> tuple[Any, float] | list[tuple[Any, float]] | None:
         """Remove and return members with lowest scores."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=True, client=client)
-        name = self.make_key(name, version=version)
         try:
-            result = await client.zpopmin(name, count)
+            result = await client.zpopmin(key, count)
 
             if not result:
                 return None if count is None else []
@@ -2850,7 +2870,7 @@ class AsyncClientCommands(Generic[Backend]):
 
     async def zrange(
         self,
-        name: KeyT,
+        key: KeyT,
         start: int,
         end: int,
         desc: bool = False,
@@ -2860,11 +2880,12 @@ class AsyncClientCommands(Generic[Backend]):
         client: Backend | Any | None = None,
     ) -> list[Any] | list[tuple[Any, float]]:
         """Return members in sorted set by index range."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
         try:
             result = await client.zrange(
-                name,
+                key,
                 start,
                 end,
                 desc=desc,
@@ -2881,7 +2902,7 @@ class AsyncClientCommands(Generic[Backend]):
 
     async def zrangebyscore(
         self,
-        name: KeyT,
+        key: KeyT,
         min: float | str,  # noqa: A002
         max: float | str,  # noqa: A002
         start: int | None = None,
@@ -2892,11 +2913,12 @@ class AsyncClientCommands(Generic[Backend]):
         client: Backend | Any | None = None,
     ) -> list[Any] | list[tuple[Any, float]]:
         """Return members in sorted set by score range."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
         try:
             result = await client.zrangebyscore(
-                name,
+                key,
                 min,
                 max,
                 start=start,
@@ -2914,56 +2936,59 @@ class AsyncClientCommands(Generic[Backend]):
 
     async def zrank(
         self,
-        name: KeyT,
+        key: KeyT,
         value: Any,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> int | None:
         """Get the rank (index) of member in sorted set, ordered low to high."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
         value = self.encode(value)
         try:
-            rank = await client.zrank(name, value)
+            rank = await client.zrank(key, value)
             return int(rank) if rank is not None else None
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     async def zrem(
         self,
-        name: KeyT,
+        key: KeyT,
         *values: Any,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> int:
         """Remove members from sorted set."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=True, client=client)
-        name = self.make_key(name, version=version)
         encoded_values = [self.encode(value) for value in values]
         try:
-            return int(await client.zrem(name, *encoded_values))
+            return int(await client.zrem(key, *encoded_values))
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     async def zremrangebyscore(
         self,
-        name: KeyT,
+        key: KeyT,
         min: float | str,  # noqa: A002
         max: float | str,  # noqa: A002
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> int:
         """Remove members from sorted set with scores between min and max."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=True, client=client)
-        name = self.make_key(name, version=version)
         try:
-            return int(await client.zremrangebyscore(name, min, max))
+            return int(await client.zremrangebyscore(key, min, max))
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
     async def zrevrange(
         self,
-        name: KeyT,
+        key: KeyT,
         start: int,
         end: int,
         withscores: bool = False,
@@ -2972,11 +2997,12 @@ class AsyncClientCommands(Generic[Backend]):
         client: Backend | Any | None = None,
     ) -> list[Any] | list[tuple[Any, float]]:
         """Return members in sorted set by index range, ordered high to low."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
         try:
             result = await client.zrevrange(
-                name,
+                key,
                 start,
                 end,
                 withscores=withscores,
@@ -2992,7 +3018,7 @@ class AsyncClientCommands(Generic[Backend]):
 
     async def zrevrangebyscore(
         self,
-        name: KeyT,
+        key: KeyT,
         max: float | str,  # noqa: A002
         min: float | str,  # noqa: A002
         start: int | None = None,
@@ -3003,11 +3029,12 @@ class AsyncClientCommands(Generic[Backend]):
         client: Backend | Any | None = None,
     ) -> list[Any] | list[tuple[Any, float]]:
         """Return members in sorted set by score range, ordered high to low."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
         try:
             result = await client.zrevrangebyscore(
-                name,
+                key,
                 max,
                 min,
                 start=start,
@@ -3025,17 +3052,18 @@ class AsyncClientCommands(Generic[Backend]):
 
     async def zscore(
         self,
-        name: KeyT,
+        key: KeyT,
         value: Any,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> float | None:
         """Get the score of member in sorted set."""
+        key = self.make_key(key, version=version)
+
         client = await self._get_client(write=False, client=client)
-        name = self.make_key(name, version=version)
         value = self.encode(value)
         try:
-            score = await client.zscore(name, value)
+            score = await client.zscore(key, value)
             return float(score) if score is not None else None
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
