@@ -1239,8 +1239,6 @@ class TestDjangoValkeyCache:
             cache.make_pattern("key_*", version=1, prefix="prefix") == "prefix:1:key_*"
         )
 
-    # Sorted Set Operations Tests
-
     def test_zadd_basic(self, cache: ValkeyCache):
         """Test adding members to sorted set."""
         result = cache.zadd("scores", {"player1": 100.0, "player2": 200.0})

@@ -1072,8 +1072,6 @@ class TestAsyncDjangoValkeyCache:
             cache.make_pattern("key_*", version=1, prefix="prefix") == "prefix:1:key_*"
         )
 
-    # Sorted Set Operations Tests
-
     async def test_zadd_basic(self, cache: AsyncValkeyCache):
         """Test adding members to sorted set."""
         result = await cache.azadd("scores", {"player1": 100.0, "player2": 200.0})
