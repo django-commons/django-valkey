@@ -383,6 +383,49 @@ class BackendCommands:
     def hexists(self: BaseValkeyCache, *args, **kwargs) -> bool:
         return self.client.hexists(*args, **kwargs)
 
+    # Sorted Set Operations
+    def zadd(self: BaseValkeyCache, *args, **kwargs) -> int:
+        return self.client.zadd(*args, **kwargs)
+
+    def zcard(self: BaseValkeyCache, *args, **kwargs) -> int:
+        return self.client.zcard(*args, **kwargs)
+
+    def zcount(self: BaseValkeyCache, *args, **kwargs) -> int:
+        return self.client.zcount(*args, **kwargs)
+
+    def zincrby(self: BaseValkeyCache, *args, **kwargs) -> float:
+        return self.client.zincrby(*args, **kwargs)
+
+    def zpopmax(self: BaseValkeyCache, *args, **kwargs):
+        return self.client.zpopmax(*args, **kwargs)
+
+    def zpopmin(self: BaseValkeyCache, *args, **kwargs):
+        return self.client.zpopmin(*args, **kwargs)
+
+    def zrange(self: BaseValkeyCache, *args, **kwargs):
+        return self.client.zrange(*args, **kwargs)
+
+    def zrangebyscore(self: BaseValkeyCache, *args, **kwargs):
+        return self.client.zrangebyscore(*args, **kwargs)
+
+    def zrank(self: BaseValkeyCache, *args, **kwargs):
+        return self.client.zrank(*args, **kwargs)
+
+    def zrem(self: BaseValkeyCache, *args, **kwargs) -> int:
+        return self.client.zrem(*args, **kwargs)
+
+    def zremrangebyscore(self: BaseValkeyCache, *args, **kwargs) -> int:
+        return self.client.zremrangebyscore(*args, **kwargs)
+
+    def zrevrange(self: BaseValkeyCache, *args, **kwargs):
+        return self.client.zrevrange(*args, **kwargs)
+
+    def zrevrangebyscore(self: BaseValkeyCache, *args, **kwargs):
+        return self.client.zrevrangebyscore(*args, **kwargs)
+
+    def zscore(self: BaseValkeyCache, *args, **kwargs):
+        return self.client.zscore(*args, **kwargs)
+
 
 @decorate_all_methods(omit_exception)
 class AsyncBackendCommands:
