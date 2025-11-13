@@ -85,7 +85,9 @@ class BaseConnectionFactory(Generic[Base, Pool]):
         Reimplement this method if you want distinct
         connection pool instance caching behavior.
         """
-        key: str = params["url"]
+        # Create a stable, unique key from all connection parameters.
+        # Sort items to ensure key is deterministic regardless of dict order.
+        key = "::".join([f"{k}={str(v)}" for k, v in sorted(params.items())])
         if key not in self._pools:
             self._pools[key] = self.get_connection_pool(params)
         return self._pools[key]
