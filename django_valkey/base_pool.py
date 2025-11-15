@@ -88,7 +88,9 @@ class BaseConnectionFactory(Generic[Base, Pool]):
         # Serialize params/options into stable strings. Using str()
         # robustly handles unhashable values like dicts.
         params_key = "::".join(f"{k}={str(v)}" for k, v in sorted(params.items()))
-        options_key = "::".join(f"{k}={str(v)}" for k, v in sorted(self.options.items()))
+        options_key = "::".join(
+            f"{k}={str(v)}" for k, v in sorted(self.options.items())
+        )
         key = (params_key, options_key)
 
         if key not in self._pools:
