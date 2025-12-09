@@ -46,7 +46,7 @@ this project was initially a fork of the wonderful `django-redis` project.
 
 [Python](https://www.python.org/downloads/)  3.10+
 
-[Django](https://www.djangoproject.com/download/)  4.2.20+
+[Django](https://www.djangoproject.com/download/)  5.0+
 
 [valkey-py](https://pypi.org/project/valkey/) 6.0.1+
 

@@ -52,7 +52,7 @@ Requirements
 ~~~~~~~~~~~~
 
 - `Python`_ 3.10+
-- `Django`_ 4.2.20+
+- `Django`_ 5.0+
 - `valkey-py`_ 6.0.2+
 - `Valkey server`_ 7.2.6+
 
