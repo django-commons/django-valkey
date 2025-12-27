@@ -20,6 +20,7 @@ from django.conf import settings
 from django.core.cache.backends.base import DEFAULT_TIMEOUT, get_key_func
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
+from django.utils.version import PY313
 
 from valkey.exceptions import (
     ConnectionError as ValkeyConnectionError,
@@ -40,6 +41,11 @@ if TYPE_CHECKING:
     from valkey.asyncio.lock import Lock as AsyncLock
     from django_valkey.cache import ValkeyCache
 
+
+if not PY313:
+    from typing_extensions import deprecated
+else:
+    from warnings import deprecated
 
 _main_exceptions = (
     ValkeyTimeoutError,
@@ -1272,6 +1278,9 @@ class ClientCommands(Generic[Backend]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
+    @deprecated(
+        "this version of hset is deprecated, use `django_valkey.client.HashClient` instead"
+    )
     def hset(
         self: BaseClient,
         name: str,
@@ -1292,6 +1301,9 @@ class ClientCommands(Generic[Backend]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
+    @deprecated(
+        "this version of hdel is deprecated, use `django_valkey.client.HashClient` instead"
+    )
     def hdel(
         self: BaseClient,
         name: str,
@@ -1310,6 +1322,9 @@ class ClientCommands(Generic[Backend]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
+    @deprecated(
+        "this version of hlen is deprecated, use `django_valkey.client.HashClient` instead"
+    )
     def hlen(
         self: BaseClient,
         name: str,
@@ -1324,6 +1339,9 @@ class ClientCommands(Generic[Backend]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
+    @deprecated(
+        "this version of hkeys is deprecated, use `django_valkey.client.HashClient` instead"
+    )
     def hkeys(
         self: BaseClient,
         name: str,
@@ -1338,6 +1356,9 @@ class ClientCommands(Generic[Backend]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
+    @deprecated(
+        "this version of hexists is deprecated, use `django_valkey.client.HashClient` instead"
+    )
     def hexists(
         self: BaseClient,
         name: str,
@@ -2313,6 +2334,9 @@ class AsyncClientCommands(Generic[Backend]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
+    @deprecated(
+        "this version of hset is deprecated, use `django_valkey.async_cache.client.AsyncHashClient instead"
+    )
     async def hset(
         self,
         name: str,
@@ -2335,6 +2359,9 @@ class AsyncClientCommands(Generic[Backend]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
+    @deprecated(
+        "this version of hdel is deprecated, use `django_valkey.async_cache.client.AsyncHashClient instead"
+    )
     async def hdel(
         self,
         name: str,
@@ -2353,6 +2380,9 @@ class AsyncClientCommands(Generic[Backend]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
+    @deprecated(
+        "this version of hlen is deprecated, use `django_valkey.async_cache.client.AsyncHashClient instead"
+    )
     async def hlen(self, name: str, client: Backend | Any | None = None) -> int:
         """
         Return the number of items in hash name.
@@ -2363,6 +2393,9 @@ class AsyncClientCommands(Generic[Backend]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
+    @deprecated(
+        "this version of hkeys is deprecated, use `django_valkey.async_cache.client.AsyncHashClient instead"
+    )
     async def hkeys(self, name: str, client: Backend | Any | None = None) -> list[Any]:
         client = await self._get_client(write=False, client=client)
 
@@ -2371,6 +2404,9 @@ class AsyncClientCommands(Generic[Backend]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
+    @deprecated(
+        "this version of hexists is deprecated, use `django_valkey.async_cache.client.AsyncHashClient instead"
+    )
     async def hexists(
         self,
         name: str,

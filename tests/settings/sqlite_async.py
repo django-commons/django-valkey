@@ -4,30 +4,22 @@ CACHES = {
     "default": {
         "BACKEND": "django_valkey.async_cache.cache.AsyncValkeyCache",
         "LOCATION": ["valkey://127.0.0.1:6379?db=1", "valkey://127.0.0.1:6379?db=1"],
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_valkey.async_cache.client.AsyncDefaultClient"
-        },
+        "OPTIONS": {"CLIENT_CLASS": "django_valkey.async_cache.client.AsyncHashClient"},
     },
     "doesnotexist": {
         "BACKEND": "django_valkey.async_cache.cache.AsyncValkeyCache",
         "LOCATION": "valkey://127.0.0.1:56379?db=1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_valkey.async_cache.client.AsyncDefaultClient"
-        },
+        "OPTIONS": {"CLIENT_CLASS": "django_valkey.async_cache.client.AsyncHashClient"},
     },
     "sample": {
         "BACKEND": "django_valkey.async_cache.cache.AsyncValkeyCache",
         "LOCATION": "valkey://127.0.0.1:6379:1,valkey://127.0.0.1:6379:1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_valkey.async_cache.client.AsyncDefaultClient"
-        },
+        "OPTIONS": {"CLIENT_CLASS": "django_valkey.async_cache.client.AsyncHashClient"},
     },
     "with_prefix": {
         "BACKEND": "django_valkey.async_cache.cache.AsyncValkeyCache",
         "LOCATION": "valkey://127.0.0.1:6379?db=1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_valkey.async_cache.client.AsyncDefaultClient"
-        },
+        "OPTIONS": {"CLIENT_CLASS": "django_valkey.async_cache.client.AsyncHashClient"},
         "KEY_PREFIX": "test-prefix",
     },
 }
