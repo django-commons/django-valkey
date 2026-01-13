@@ -593,14 +593,34 @@ class AsyncBackendCommands:
 from django.core import signals  # noqa: E402
 from django.core.cache import caches, close_caches  # noqa: E402
 
+def close_sync_caches(**kwargs):
+    """
+    Synchronous cache closer for WSGI environments.
+    Only closes synchronous cache backends.
+    """
+    for conn in caches.all(initialized_only=True):
+        conn.close()
 
-async def close_async_caches(**kwargs):
+
+async def close_async_and_sync_caches(**kwargs):
+    """
+    Asynchronous cache closer for ASGI environments.
+    Handles both sync and async cache backends.
+    """
     for conn in caches.all(initialized_only=True):
         if getattr(conn, "is_async", False):
             await conn.aclose()
         else:
             conn.close()
 
+has_async_cache = any(
+    getattr(conn, "is_async", False)
+    for conn in caches.all(initialized_only=True)
+)
+    
+if has_async_cache:
+    signals.request_finished.connect(close_async_and_sync_caches)
+else:
+    signals.request_finished.connect(close_sync_caches)
 
-signals.request_finished.connect(close_async_caches)
 signals.request_finished.disconnect(close_caches)
