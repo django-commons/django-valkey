@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "django-valkey"
-version = "0.3.2"
+version = "0.4.1"
 description = "a valkey backend for django"
 readme = "README.rst"
 requires-python = ">=3.10"
@@ -29,16 +29,15 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Free Threading",
-    "Framework :: Django :: 5.0",
-    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 4.2",
     "Framework :: Django :: 5.2",
-    "Framework :: Django :: 6",
     "Framework :: Django :: 6.0"
 ]
 
 dependencies = [
-    "django>=4.2",
+    "django>=4.2,!=5.0.*,!=5.1.*",
     "valkey>=6.0.2",
+    "typing-extensions>=4.15; python_version < '3.13'",
 ]
 
 
@@ -50,13 +49,20 @@ lz4 = [
     "lz4>=4.3.3",
 ]
 pyzstd = [
-    "pyzstd>=0.16.2",
+    "backports.zstd>=1.0.0; python_version < '3.14'",
+]
+zstd = [
+    "backports.zstd>=1.0.0; python_version < '3.14'",
 ]
 msgpack = [
     "msgpack>=1.1.0",
 ]
 brotli = [
     "brotli>=1.1.0",
+]
+
+msgspec = [
+    "msgspec>=0.19.0",
 ]
 
 [dependency-groups]

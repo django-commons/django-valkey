@@ -4,35 +4,33 @@ import functools
 import inspect
 import logging
 from collections.abc import AsyncGenerator, Callable, Iterator
-from inspect import iscoroutinefunction
 from typing import (
-    Any,
-    TypeVar,
-    Generic,
     TYPE_CHECKING,
+    Any,
+    Generic,
+    TypeVar,
 )
 
 from django.conf import settings
-from django.core.cache.backends.base import get_key_func
+from django.core.cache.backends.base import DEFAULT_TIMEOUT, get_key_func
 from django.utils.module_loading import import_string
 
 from django_valkey.exceptions import ConnectionInterrupted
 
 if TYPE_CHECKING:
-    from valkey.lock import Lock
     from valkey.asyncio.lock import Lock as ALock
+    from valkey.lock import Lock
 
 Client = TypeVar("Client")
 Backend = TypeVar("Backend")
 
 CONNECTION_INTERRUPTED = object()
-DEFAULT_TIMEOUT = object()
 ATTR_DOES_NOT_EXIST = object()
 
 
 def decorate_all_methods(decorator):
     def decorate(cls):
-        for attr in vars(cls):
+        for attr in dir(cls):
             # dunders and `get` should not be decorated
             # get is handled by `_get`
             if attr.startswith("__") or attr in {"get", "get_or_set"}:
@@ -91,6 +89,34 @@ def omit_exception(
         except ConnectionInterrupted as e:
             yield __handle_error(self, e)
 
+    # sync generators (iter_keys, sscan_iter) are only generator on client class
+    # in the backend they are just a function (that returns a generator)
+    # so inspect.isgeneratorfunction does not work
+    if not gen:
+        wrapper = _decorator
+
+    # if method is a generator or async generator, it should be iterated over by this decorator
+    # generators don't error by simply being called, they need to be iterated over.
+    else:
+        wrapper = _generator_decorator
+
+    return wrapper
+
+
+def omit_exception_async(
+    method: Callable | None = None, return_value: Any | None = None, gen=False
+):
+    if method is None:
+        return functools.partial(omit_exception, return_value=return_value)
+
+    def __handle_error(self, e) -> Any | None:
+        if getattr(self, "_ignore_exceptions", None):
+            if getattr(self, "_log_ignored_exceptions", None):
+                self.logger.exception("Exception ignored")
+
+            return return_value
+        raise e.__cause__
+
     @functools.wraps(method)
     async def _async_decorator(self, *args, **kwargs):
         try:
@@ -106,22 +132,13 @@ def omit_exception(
         except ConnectionInterrupted as e:
             yield __handle_error(self, e)
 
-    # sync generators (iter_keys, sscan_iter) are only generator on client class
-    # in the backend they are just a function (that returns a generator)
-    # so inspect.isgeneratorfunction does not work
-    if not inspect.isasyncgenfunction(method) and not gen:
-        wrapper = _async_decorator if iscoroutinefunction(method) else _decorator
-
-    # if method is a generator or async generator, it should be iterated over by this decorator
-    # generators don't error by simply being called, they need to be iterated over.
+    if inspect.isasyncgenfunction(method):
+        # if method is a generator or async generator, it should be iterated over by this decorator
+        # generators don't error by simply being called, they need to be iterated over.
+        wrapper = _async_generator_decorator
     else:
-        wrapper = (
-            _async_generator_decorator
-            if inspect.isasyncgenfunction(method)
-            else _generator_decorator
-        )
+        wrapper = _async_decorator
 
-    wrapper.original = method
     return wrapper
 
 
@@ -199,7 +216,6 @@ class BaseValkeyCache(Generic[Client, Backend]):
         return self.client.make_pattern(*args, **kwargs)
 
 
-@decorate_all_methods(omit_exception)
 class BackendCommands:
     def __contains__(self, item):
         return self.has_key(item)
@@ -238,6 +254,9 @@ class BackendCommands:
         if val is self._missing_key:
             if callable(default):
                 default = default()
+
+            if timeout is DEFAULT_TIMEOUT:
+                timeout = self.default_timeout
             self.add(key, default, timeout=timeout, version=version)
             # Fetch the value again to avoid a race condition if another caller
             # added a value between the first get() and the add() above.
@@ -384,7 +403,6 @@ class BackendCommands:
         return self.client.hexists(*args, **kwargs)
 
 
-@decorate_all_methods(omit_exception)
 class AsyncBackendCommands:
     def __getattr__(self, item):
         if item.startswith("a"):
@@ -422,6 +440,8 @@ class AsyncBackendCommands:
         if val is self._missing_key:
             if callable(default):
                 default = default()
+            if timeout is DEFAULT_TIMEOUT:
+                timeout = self.default_timeout
             await self.aadd(key, default, timeout=timeout, version=version)
             # Fetch the value again to avoid a race condition if another caller
             # added a value between the first aget() and the aadd() above.

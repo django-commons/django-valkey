@@ -53,6 +53,7 @@ Requirements
 
 - `Python`_ 3.10+
 - `Django`_ 4.2.20+
+    - `Django~=5.0` and `Django~=5.1` are not supported, because they are end of life: https://endoflife.date/django
 - `valkey-py`_ 6.0.2+
 - `Valkey server`_ 7.2.6+
 
@@ -91,12 +92,21 @@ Install 3rd party compression
 
 .. code-block:: console
 
-    python -m pip install django-valkey[pyzstd]
+    python -m pip install django-valkey[zstd]  # not needed since python 3.14
 
 .. code-block:: console
 
     python -m pip install django-valkey[brotli]
 
+Install with 3rd party serializers
+
+.. code-block:: console
+
+   python -m pip install django-valkey[msgpack]
+
+.. code-block:: console
+
+   python -m pip install django-valkey[msgspec]
 
 
 

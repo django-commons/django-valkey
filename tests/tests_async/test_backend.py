@@ -213,6 +213,12 @@ class TestAsyncDjangoValkeyCache:
         res = await cache.aadd("other_key", "New value")
         assert res is True
 
+    async def test_get_or_set(self, cache: AsyncValkeyCache):
+        assert await cache.get("something new", None) is None
+        await cache.get_or_set("something new", "b")
+        assert await cache.get("something new", None) == "b"
+        assert await cache.get_or_set("something new", "b") == "b"
+
     async def test_get_many(self, cache: AsyncValkeyCache):
         await cache.aset("a", 1)
         await cache.aset("b", 2)

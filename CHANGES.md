@@ -1,3 +1,32 @@
+Version 0.4.1
+-------------
+
+### deprecation
+- deprecate old hash methods
+
+### bug fix
+- fix bug regarding `get_or_set`
+
+Version 0.4.0
+-------------
+
+### new
+- added support for msgspec serialization (both json and msgpack)
+- support django 6
+- support python 3.14
+
+### Breaking changes
+- dropped support for django 5.0 and 5.1
+- `BackendCommands` and `AsyncBackendCommands` are no longer decorated with `omit_exception`.
+- added `omit_exception_async` to decorate async operations, instead of using `omit_exception` for both sync and async.
+- `omit_exception` no longer supports async functions and generators.
+- added `DecoratedBackendCommands` and `DecoratedAsyncBackendCommands` as commands decorated with `omit_exception` and `omit_exception_async`.
+- `AsyncValkeyCache` and `ValkeyCache` no longer inherit from `BackendCommands` and `AsyncBackendCommands`, they inherit from `DecoratedBackendCommands` and `DecoratedAsyncBackendCommands` instead.
+- stdlib `zstd` is used instead of `pyzstd` (`zstd` is the same as `pyzstd`, but since the package name are different this is counted is breaking change)
+
+### improvement
+- removed the undecorator loop from cluster client
+
 Version 0.3.2
 -------------
 

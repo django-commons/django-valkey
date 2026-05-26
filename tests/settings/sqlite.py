@@ -3,22 +3,22 @@ CACHES = {
     "default": {
         "BACKEND": "django_valkey.cache.ValkeyCache",
         "LOCATION": ["valkey://127.0.0.1:6379?db=1", "valkey://127.0.0.1:6379?db=1"],
-        "OPTIONS": {"CLIENT_CLASS": "django_valkey.client.DefaultClient"},
+        "OPTIONS": {"CLIENT_CLASS": "django_valkey.client.HashClient"},
     },
     "doesnotexist": {
         "BACKEND": "django_valkey.cache.ValkeyCache",
         "LOCATION": "valkey://127.0.0.1:56379?db=1",
-        "OPTIONS": {"CLIENT_CLASS": "django_valkey.client.DefaultClient"},
+        "OPTIONS": {"CLIENT_CLASS": "django_valkey.client.HashClient"},
     },
     "sample": {
         "BACKEND": "django_valkey.cache.ValkeyCache",
         "LOCATION": "valkey://127.0.0.1:6379:1,valkey://127.0.0.1:6379:1",
-        "OPTIONS": {"CLIENT_CLASS": "django_valkey.client.DefaultClient"},
+        "OPTIONS": {"CLIENT_CLASS": "django_valkey.client.HashClient"},
     },
     "with_prefix": {
         "BACKEND": "django_valkey.cache.ValkeyCache",
         "LOCATION": "valkey://127.0.0.1:6379?db=1",
-        "OPTIONS": {"CLIENT_CLASS": "django_valkey.client.DefaultClient"},
+        "OPTIONS": {"CLIENT_CLASS": "django_valkey.client.HashClient"},
         "KEY_PREFIX": "test-prefix",
     },
 }
