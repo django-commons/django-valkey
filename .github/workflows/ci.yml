@@ -8,7 +8,7 @@ jobs:
     timeout-minutes: 60
     name: Update docker cache
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - name: Cache docker images
         id: custom-cache
         uses: actions/cache@v5
@@ -59,7 +59,7 @@ jobs:
     env:
       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
@@ -79,7 +79,7 @@ jobs:
         run: docker image load -i ./custom-cache/all.tar
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
 
