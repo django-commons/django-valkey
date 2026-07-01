@@ -8,10 +8,10 @@ jobs:
     timeout-minutes: 60
     name: Update docker cache
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Cache docker images
         id: custom-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6.1.0
         with:
           path: ./custom-cache/
           key: custom-cache
@@ -59,7 +59,7 @@ jobs:
     env:
       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v6
@@ -69,7 +69,7 @@ jobs:
 
       - name: Cache docker images
         id: custom-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6.1.0
         with:
           path: ./custom-cache/
           fail-on-cache-miss: true
