@@ -80,7 +80,7 @@ DJANGO_VALKEY_IGNORE_EXCEPTIONS = True
 
 ### Log exceptions when ignored
 
-when ignoring exceptions with `IGNORE_EXCEPTIONS` or `DJANGO_VALKEY_IGNORE_EXCEPTION`, you may optionally log exceptions by setting the global variable `DJANGO_VALKEY_LOG_EXCEPTION` in your settings:
+when ignoring exceptions with `IGNORE_EXCEPTIONS` or `DJANGO_VALKEY_IGNORE_EXCEPTION`, you may optionally log exceptions by setting the global variable `DJANGO_VALKEY_LOG_IGNORED_EXCEPTION` in your settings:
 
 ```python
 DJANGO_VALKEY_LOG_IGNORED_EXCEPTION = True
