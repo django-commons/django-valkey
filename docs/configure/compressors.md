@@ -42,7 +42,9 @@ CACHE_COMPRESS_LEVEL = 11  # defaults to 11
 CACHE_COMPRESS_MIN_LENGTH = 15  # defaults to 15
 COMPRESS_BROTLI_LGWIN = 22  # defaults to 22
 COMPRESS_BROTLI_LGBLOCK = 0  # defaults to 0
-COMPRESS_BROTLI_MODE = "GENERIC"  # defaults to "GENERIC" other options are: ("GENERIC", "TEXT", "FONT")
+COMPRESS_BROTLI_MODE = (
+    "GENERIC"  # defaults to "GENERIC" other options are: ("GENERIC", "TEXT", "FONT")
+)
 ```
 
 *NOTE* the values shown here are only examples and *not* best practice or anything.
@@ -174,7 +176,9 @@ CACHES = {
 CACHE_COMPRESS_LEVEL = 9  # defaults to 6
 CACHE_COMPRESS_MIN_LEVEL = 15  # defaults to 15
 
-compress_zlib_wbits = 15  # defaults to 15  (NOTE: only available in python 3.11 and newer
+compress_zlib_wbits = (
+    15  # defaults to 15  (NOTE: only available in python 3.11 and newer
+)
 ```    
 
 *NOTE* the values shown here are only examples and *not* best practice or anything.
@@ -215,8 +219,12 @@ CACHE_COMPRESS_LEVEL = 1  # defaults to 1
 CACHE_COMPRESS_MIN_LEVEL = 15  # defaults to 15
 
 # the below settings are all defaulted to None
-COMPRESS_ZSTD_OPTIONS = {...}  # if you set this, `CACHE_COMPRESS_LEVEL` will be ignored.
-DECOMPRESS_ZSTD_OPTIONS = {...}  # note: if you don't set this, the above one will be used.
+COMPRESS_ZSTD_OPTIONS = {
+    ...
+}  # if you set this, `CACHE_COMPRESS_LEVEL` will be ignored.
+DECOMPRESS_ZSTD_OPTIONS = {
+    ...
+}  # note: if you don't set this, the above one will be used.
 COMPRESS_ZSTD_DICT = {...}
 DECOMPRESS_ZSTD_DICT = {...}  # note: if you don't set this, the above one will be used.
 ```

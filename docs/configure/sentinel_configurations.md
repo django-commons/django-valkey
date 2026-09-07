@@ -92,9 +92,9 @@ it is also possible to set some caches as sentinels and some as not:
 
 ```python
 SENTINELS = [
-   ('sentinel-1', 26379),
-   ('sentinel-2', 26379),
-   ('sentinel-3', 26379),
+    ("sentinel-1", 26379),
+    ("sentinel-2", 26379),
+    ("sentinel-3", 26379),
 ]
 CACHES = {
     "sentinel": {
