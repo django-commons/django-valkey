@@ -1,6 +1,6 @@
 import re
 from collections import OrderedDict
-from typing import Any, List, Dict
+from typing import Any
 
 from valkey import Valkey
 from valkey.typing import EncodableT, KeyT
@@ -52,7 +52,7 @@ supported methods:
 
 
 class ShardClient(DefaultClient):
-    _findhash = re.compile(r".*\{(.*)\}.*", re.I)
+    _findhash = re.compile(r".*\{(.*)\}.*", re.IGNORECASE)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -127,7 +127,7 @@ class ShardClient(DefaultClient):
         self,
         key: KeyT,
         value: EncodableT,
-        timeout: int | float | None = DEFAULT_TIMEOUT,
+        timeout: float | None = DEFAULT_TIMEOUT,
         version: int | None = None,
         client: Valkey | Any | None = None,
         nx: bool = False,
@@ -152,7 +152,7 @@ class ShardClient(DefaultClient):
 
     def set_many(
         self,
-        data: Dict[KeyT, EncodableT],
+        data: dict[KeyT, EncodableT],
         timeout: float | None = DEFAULT_TIMEOUT,
         version: int | None = None,
         client: Valkey | Any | None = None,
@@ -216,7 +216,7 @@ class ShardClient(DefaultClient):
         search: str,
         version: int | None = None,
         client: Valkey | Any | None = None,
-    ) -> List[str]:
+    ) -> list[str]:
         pattern = self.make_pattern(search, version=version)
         keys = []
         try:

@@ -1,7 +1,6 @@
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from django.core.exceptions import ImproperlyConfigured
-
 from valkey.sentinel import SentinelConnectionPool
 
 from django_valkey.client.default import DefaultClient
@@ -25,7 +24,7 @@ class SentinelClient(DefaultClient):
         if isinstance(server, str):
             url = urlparse(server)
             primary_query = parse_qs(url.query, keep_blank_values=True)
-            replica_query = primary_query
+            replica_query = primary_query.copy()
             primary_query["is_master"] = [1]  # type: ignore
             replica_query["is_master"] = [0]  # type: ignore
 

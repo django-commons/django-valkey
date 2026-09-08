@@ -1,11 +1,9 @@
 from collections.abc import Iterable
 
 import pytest
-from pytest_django.fixtures import SettingsWrapper
-
 from django.core.cache import caches
 from django.test import override_settings
-
+from pytest_django import Settings
 from valkey.cluster import ValkeyCluster
 
 from django_valkey.cluster_cache.cache import ClusterValkeyCache
@@ -79,7 +77,7 @@ class TestDjangoValkeyCache:
         self,
         patch_itersize_setting,
         cache: ClusterValkeyCache,
-        settings: SettingsWrapper,
+        settings: Settings,
         mocker,
     ):
         client_mock = mocker.patch(

@@ -9,7 +9,7 @@ CACHES = {
     "default": {
         "BACKEND": "django_valkey.cache.ValkeyCache",
         "LOCATION": "valkey://127.0.0.1:6379",
-        "OPTIONS": {...}
+        "OPTIONS": {...},
     }
 }
 ```
@@ -21,9 +21,7 @@ CACHES = {
     "default": {
         # ...
         "LOCATION": "valkey://django@localhost:6379/0",
-        "OPTIONS": {
-            "PASSWORD": "mysecret"
-        }
+        "OPTIONS": {"PASSWORD": "mysecret"},
     }
 }
 ```
@@ -85,9 +83,7 @@ CACHE = {
         "LOCATION": [
             "valkey://127.0.0.1:6379",
         ],
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_valkey.client.DefaultClient"
-        }
+        "OPTIONS": {"CLIENT_CLASS": "django_valkey.client.DefaultClient"},
     }
 }
 ```
@@ -111,10 +107,9 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_valkey.client.SentinelClient",
             "SENTINELS": SENTINELS,
-
             # optional
-            "SENTINEL_KWARGS": {}
-        }
+            "SENTINEL_KWARGS": {},
+        },
     }
 }
 ```
@@ -135,9 +130,7 @@ CACHE = {
             "valkey://127.0.0.1:6379/1",
             "valkey://127.0.0.1:6379/2",
         ],
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_valkey.client.ShardClient"
-        }
+        "OPTIONS": {"CLIENT_CLASS": "django_valkey.client.ShardClient"},
     }
 }
 ```
@@ -150,9 +143,9 @@ to use this client change your configs to look like this:
 ```python
 CACHES = {
     "default": {
-    # ...
-    "OPTIONS": {
-        "CLIENT_CLASS": "django_valkey.client.HerdClient",
+        # ...
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_valkey.client.HerdClient",
         }
     }
 }
@@ -173,9 +166,7 @@ django-valkey's pickle serializer uses pickle.DEFAULT_PROTOCOL as the default pr
 CACHES = {
     "default": {
         # ...
-        "OPTIONS": {
-            "PICKLE_VERSION": 5
-        }
+        "OPTIONS": {"PICKLE_VERSION": 5}
     }
 }
 ```
@@ -354,7 +345,7 @@ CACHES = {
         "OPTIONS": {
             "CONNECTION_FACTORY": "path.to.another",
         }
-    }
+    },
 }
 ```
 
@@ -417,9 +408,7 @@ CACHES = {
     "default": {
         "BACKEND": "django_valkey.cache.ValkeyCache",
         # ...
-        "OPTIONS": {
-            "CONNECTION_POOL_KWARGS": {"max_connections": 100}
-        }
+        "OPTIONS": {"CONNECTION_POOL_KWARGS": {"max_connections": 100}},
     }
 }
 ```
@@ -462,6 +451,7 @@ for simplicity you can subclass the connection pool provided by valkey-py packag
 ```python
 from valkey.connection import ConnectionPool
 
+
 class MyOwnPool(ConnectionPool):
     pass
 ```
@@ -499,8 +489,8 @@ CACHES = {
         "LOCATION": "valkeys://127.0.0.1:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_valkey.client.DefaultClient",
-            "CONNECTION_POOL_KWARGS": {"ssl_cert_reqs": None}
-        }
+            "CONNECTION_POOL_KWARGS": {"ssl_cert_reqs": None},
+        },
     }
 }
 ```

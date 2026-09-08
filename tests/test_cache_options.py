@@ -2,15 +2,14 @@ import copy
 from typing import cast
 
 import pytest
+from django.core.cache import cache as default_cache
+from django.core.cache import caches
 from pytest import LogCaptureFixture
-from pytest_django.fixtures import SettingsWrapper
-
-from django.core.cache import caches, cache as default_cache
-
+from pytest_django import Settings
 from valkey.exceptions import ConnectionError
 
 from django_valkey.cache import ValkeyCache
-from django_valkey.client import ShardClient, HerdClient, DefaultClient
+from django_valkey.client import DefaultClient, HerdClient, ShardClient
 from django_valkey.cluster_cache.client import DefaultClusterClient
 
 
@@ -94,13 +93,13 @@ no_herd_method = {
 )
 class TestDjangoValkeyOmitException:
     @pytest.fixture
-    def conf_cache(self, settings: SettingsWrapper):
+    def conf_cache(self, settings: Settings):
         caches_setting = copy.deepcopy(settings.CACHES)
         settings.CACHES = caches_setting
         return caches_setting
 
     @pytest.fixture
-    def conf_cache_to_ignore_exception(self, settings: SettingsWrapper, conf_cache):
+    def conf_cache_to_ignore_exception(self, settings: Settings, conf_cache):
         conf_cache["doesnotexist"]["OPTIONS"]["IGNORE_EXCEPTIONS"] = True
         conf_cache["doesnotexist"]["OPTIONS"]["LOG_IGNORED_EXCEPTIONS"] = True
         settings.DJANGO_VALKEY_IGNORE_EXCEPTIONS = True
@@ -205,7 +204,7 @@ class TestDjangoValkeyOmitException:
             for record in caplog.records
         )
 
-    def test_get_django_omit_exceptions_priority_1(self, settings: SettingsWrapper):
+    def test_get_django_omit_exceptions_priority_1(self, settings: Settings):
         caches_setting = copy.deepcopy(settings.CACHES)
         caches_setting["doesnotexist"]["OPTIONS"]["IGNORE_EXCEPTIONS"] = True
         settings.CACHES = caches_setting
@@ -214,7 +213,7 @@ class TestDjangoValkeyOmitException:
         assert cache._ignore_exceptions is True
         assert cache.get("key") is None
 
-    def test_get_django_omit_exceptions_priority_2(self, settings: SettingsWrapper):
+    def test_get_django_omit_exceptions_priority_2(self, settings: Settings):
         caches_setting = copy.deepcopy(settings.CACHES)
         caches_setting["doesnotexist"]["OPTIONS"]["IGNORE_EXCEPTIONS"] = False
         settings.CACHES = caches_setting
@@ -268,7 +267,7 @@ class TestDjangoValkeyCacheEscapePrefix:
     isinstance(default_cache.client, DefaultClusterClient),
     reason="cluster client doesn't support ignore exception",
 )
-def test_custom_key_function(cache: ValkeyCache, settings: SettingsWrapper):
+def test_custom_key_function(cache: ValkeyCache, settings: Settings):
     caches_setting = copy.deepcopy(settings.CACHES)
     caches_setting["default"]["KEY_FUNCTION"] = "tests.test_cache_options.make_key"
     caches_setting["default"]["REVERSE_KEY_FUNCTION"] = (
