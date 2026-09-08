@@ -1,5 +1,4 @@
 import pytest
-
 from django.core.exceptions import ImproperlyConfigured
 
 from django_valkey import pool

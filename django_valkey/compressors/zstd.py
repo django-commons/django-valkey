@@ -1,4 +1,5 @@
 import sys
+
 from django.conf import settings
 
 from django_valkey.compressors.base import BaseCompressor

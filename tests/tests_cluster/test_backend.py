@@ -1,11 +1,9 @@
 from collections.abc import Iterable
 
 import pytest
-from pytest_django.fixtures import SettingsWrapper
-
 from django.core.cache import caches
 from django.test import override_settings
-
+from pytest_django.fixtures import SettingsWrapper
 from valkey.cluster import ValkeyCluster
 
 from django_valkey.cluster_cache.cache import ClusterValkeyCache

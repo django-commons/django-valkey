@@ -2,15 +2,14 @@ import copy
 from typing import cast
 
 import pytest
+from django.core.cache import cache as default_cache
+from django.core.cache import caches
 from pytest import LogCaptureFixture
 from pytest_django.fixtures import SettingsWrapper
-
-from django.core.cache import caches, cache as default_cache
-
 from valkey.exceptions import ConnectionError
 
 from django_valkey.cache import ValkeyCache
-from django_valkey.client import ShardClient, HerdClient, DefaultClient
+from django_valkey.client import DefaultClient, HerdClient, ShardClient
 from django_valkey.cluster_cache.client import DefaultClusterClient
 
 
