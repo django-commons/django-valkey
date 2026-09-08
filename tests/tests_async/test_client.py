@@ -1,10 +1,9 @@
 from collections.abc import Iterable
 
 import pytest
+from django.core.cache import DEFAULT_CACHE_ALIAS
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
-
-from django.core.cache import DEFAULT_CACHE_ALIAS
 
 from django_valkey.async_cache.cache import AsyncValkeyCache
 from django_valkey.async_cache.client import AsyncDefaultClient

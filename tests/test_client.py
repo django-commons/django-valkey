@@ -1,10 +1,11 @@
 from collections.abc import Iterable
+from typing import ClassVar
 
 import pytest
+from django.core.cache import DEFAULT_CACHE_ALIAS
+from django.core.cache import cache as default_cache
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
-
-from django.core.cache import DEFAULT_CACHE_ALIAS, cache as default_cache
 
 from django_valkey.cache import ValkeyCache
 from django_valkey.client import DefaultClient, ShardClient
@@ -147,7 +148,7 @@ class TestDefaultClient:
     not isinstance(default_cache.client, ShardClient), reason="shard only test"
 )
 class TestShardClient:
-    CLIENT_METHODS_FOR_MOCK = {
+    CLIENT_METHODS_FOR_MOCK: ClassVar[set[str]] = {
         "add",
         "close",
         "expire",
@@ -161,7 +162,7 @@ class TestShardClient:
 
     @pytest.fixture
     def shard_cache(self):
-        from django.core.cache import caches, ConnectionProxy
+        from django.core.cache import ConnectionProxy, caches
 
         cache = ConnectionProxy(caches, "default")
         yield cache

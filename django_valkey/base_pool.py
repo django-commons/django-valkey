@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Any
+from typing import Any, ClassVar, Generic, TypeVar
 
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
@@ -14,7 +14,7 @@ class BaseConnectionFactory(Generic[Base, Pool]):
     # ConnectionFactory is instantiated, as Django creates new cache client
     # (DefaultClient) instance for every request.
 
-    _pools: dict[str, Pool | Any] = {}
+    _pools: ClassVar[dict[str, Pool | Any]] = {}
 
     def __init__(self, options: dict):
         pool_cls_path = options.get("CONNECTION_POOL_CLASS", self.path_pool_cls)

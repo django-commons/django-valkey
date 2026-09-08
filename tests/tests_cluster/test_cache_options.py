@@ -1,7 +1,6 @@
 import copy
 
 from pytest_django.fixtures import SettingsWrapper
-
 from valkey import ValkeyCluster
 
 from django_valkey.cluster_cache.cache import ClusterValkeyCache
@@ -10,8 +9,8 @@ from django_valkey.cluster_cache.cache import ClusterValkeyCache
 class TestDjangoValkeyCacheEscapePrefix:
     def test_keys(
         self,
-        key_prefix_cache: ClusterValkeyCache,  # noqa: F811
-        with_prefix_cache: ClusterValkeyCache,  # noqa: F811
+        key_prefix_cache: ClusterValkeyCache,
+        with_prefix_cache: ClusterValkeyCache,
     ):
         key_prefix_cache.set("a", "1")
         with_prefix_cache.set("b", "2")

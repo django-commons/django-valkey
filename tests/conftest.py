@@ -3,14 +3,13 @@ from collections.abc import Iterable
 from typing import cast
 
 import pytest
-from pytest_django.fixtures import SettingsWrapper
-
 from asgiref.compatibility import iscoroutinefunction
-from django.core.cache import cache as default_cache, caches
+from django.core.cache import cache as default_cache
+from django.core.cache import caches
+from pytest_django.fixtures import SettingsWrapper
 
 from django_valkey.base import BaseValkeyCache
 from django_valkey.cache import ValkeyCache
-
 
 pytestmark = pytest.mark.anyio
 

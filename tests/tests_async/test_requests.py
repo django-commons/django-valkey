@@ -1,11 +1,9 @@
 import pytest
-
 from django.core import signals
 from django.core.cache import close_caches
 
-from django_valkey.base import close_async_caches
 from django_valkey.async_cache.cache import AsyncValkeyCache
-
+from django_valkey.base import close_async_caches
 
 pytestmark = pytest.mark.anyio
 

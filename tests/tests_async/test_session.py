@@ -1,10 +1,8 @@
 import base64
 import string
 from datetime import timedelta
-from typing import Optional, Type
 
 import pytest
-
 from django.conf import settings
 from django.contrib.sessions.backends.base import SessionBase
 from django.contrib.sessions.backends.cache import SessionStore as CacheSession
@@ -12,10 +10,9 @@ from django.core.cache import caches
 from django.test import override_settings
 from django.utils import timezone
 
-
 pytestmark = pytest.mark.anyio
 
-SessionType = Type[SessionBase]
+SessionType = type[SessionBase]
 
 
 # Copied from Django's sessions test suite. Keep in sync with upstream.
@@ -25,7 +22,7 @@ class SessionTestsMixin:
     # class, which wouldn't work, and to allow different TestCase subclasses to
     # be used.
 
-    backend: Optional[SessionType] = None  # subclasses must specify
+    backend: SessionType | None = None  # subclasses must specify
 
     @pytest.fixture(autouse=True)
     async def setup(self):

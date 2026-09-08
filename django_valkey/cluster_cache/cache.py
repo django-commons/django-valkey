@@ -1,6 +1,6 @@
 from valkey.cluster import ValkeyCluster
 
-from django_valkey.base import BaseValkeyCache, BackendCommands
+from django_valkey.base import BackendCommands, BaseValkeyCache
 from django_valkey.cluster_cache.client import DefaultClusterClient
 
 

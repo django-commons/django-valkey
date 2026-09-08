@@ -1,5 +1,5 @@
 from valkey import Valkey
-from valkey.typing import KeyT, EncodableT
+from valkey.typing import EncodableT, KeyT
 
 from django_valkey.async_cache.client import AsyncDefaultClient
 from django_valkey.base_client import (

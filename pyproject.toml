@@ -78,7 +78,7 @@ dev = [
     "pytest-django>=4.11.1",
     "pytest-mock>=3.14.0",
     "pytest-subtests>=0.14.1",
-    "ruff>=0.12.5",
+    "ruff>=0.16.6",
 ]
 docs = [
     "mkdocs>=1.6.1",

@@ -3,15 +3,14 @@ import threading
 import time
 from collections.abc import Iterable
 from datetime import timedelta
-from typing import List, cast
+from typing import cast
 
 import pytest
-from pytest_django.fixtures import SettingsWrapper
-from pytest_mock import MockerFixture
-
 from django.core.cache import caches
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.test import override_settings
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 
 from django_valkey.cache import ValkeyCache
 from django_valkey.client import ShardClient, herd
@@ -143,9 +142,11 @@ class TestDjangoValkeyCache:
         ):
             # JSONSerializer and MSGPackSerializer use the isoformat for
             # datetimes.
-            now_dt: str | datetime.datetime = datetime.datetime.now().isoformat()
+            now_dt: str | datetime.datetime = datetime.datetime.now(
+                tz=datetime.timezone.utc
+            ).isoformat()
         else:
-            now_dt = datetime.datetime.now()
+            now_dt = datetime.datetime.now(tz=datetime.timezone.utc)
 
         test_dict = {"id": 1, "date": now_dt, "name": "Foo"}
 
@@ -242,9 +243,7 @@ class TestDjangoValkeyCache:
         assert res == {"a": 1, "b": 2, "c": 3}
 
     def test_mget(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient) or isinstance(
-            cache.client, DefaultClusterClient
-        ):
+        if isinstance(cache.client, (ShardClient, DefaultClusterClient)):
             pytest.skip()
         cache.set("a", 1)
         cache.set("b", 2)
@@ -262,9 +261,7 @@ class TestDjangoValkeyCache:
         assert res == {"a": "1", "ب": "2", "c": "الف"}
 
     def test_mget_unicode(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient) or isinstance(
-            cache.client, DefaultClusterClient
-        ):
+        if isinstance(cache.client, (ShardClient, DefaultClusterClient)):
             pytest.skip()
 
         cache.set("fooa", "1")
@@ -280,9 +277,7 @@ class TestDjangoValkeyCache:
         assert res == {"a": 1, "b": 2, "c": 3}
 
     def test_mset(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient) or isinstance(
-            cache.client, DefaultClusterClient
-        ):
+        if isinstance(cache.client, (ShardClient, DefaultClusterClient)):
             pytest.skip()
         cache.mset({"a": 1, "b": 2, "c": 3})
         res = cache.mget(["a", "b", "c"])
@@ -369,7 +364,7 @@ class TestDjangoValkeyCache:
         assert bool(res) is False
 
     def test_delete_many_empty_generator(self, cache: ValkeyCache):
-        res = cache.delete_many(key for key in cast(List[str], []))
+        res = cache.delete_many(key for key in cast(list[str], []))
         assert bool(res) is False
 
     def test_incr(self, cache: ValkeyCache):
@@ -731,51 +726,67 @@ class TestDjangoValkeyCache:
     def test_pexpire_at(self, cache: ValkeyCache):
         # Test settings expiration time 1 hour ahead by datetime.
         cache.set("foo", "bar", timeout=None)
-        expiration_time = datetime.datetime.now() + timedelta(hours=1)
+        expiration_time = datetime.datetime.now(tz=datetime.timezone.utc) + timedelta(
+            hours=1
+        )
         assert cache.pexpire_at("foo", expiration_time) is True
         ttl = cache.pttl("foo")
         assert pytest.approx(ttl, 10) == timedelta(hours=1).total_seconds()
 
         # Test settings expiration time 1 hour ahead by Unix timestamp.
         cache.set("foo", "bar", timeout=None)
-        expiration_time = datetime.datetime.now() + timedelta(hours=2)
+        expiration_time = datetime.datetime.now(tz=datetime.timezone.utc) + timedelta(
+            hours=2
+        )
         assert cache.pexpire_at("foo", int(expiration_time.timestamp() * 1000)) is True
         ttl = cache.pttl("foo")
         assert pytest.approx(ttl, 10) == timedelta(hours=2).total_seconds() * 1000
 
         # Test settings expiration time 1 hour in the past, which effectively
         # deletes the key.
-        expiration_time = datetime.datetime.now() - timedelta(hours=2)
+        expiration_time = datetime.datetime.now(tz=datetime.timezone.utc) - timedelta(
+            hours=2
+        )
         assert cache.pexpire_at("foo", expiration_time) is True
         value = cache.get("foo")
         assert value is None
 
-        expiration_time = datetime.datetime.now() + timedelta(hours=2)
+        expiration_time = datetime.datetime.now(tz=datetime.timezone.utc) + timedelta(
+            hours=2
+        )
         assert cache.pexpire_at("not-existent-key", expiration_time) is False
 
     def test_expire_at(self, cache: ValkeyCache):
         # Test settings expiration time 1 hour ahead by datetime.
         cache.set("foo", "bar", timeout=None)
-        expiration_time = datetime.datetime.now() + timedelta(hours=1)
+        expiration_time = datetime.datetime.now(tz=datetime.timezone.utc) + timedelta(
+            hours=1
+        )
         assert cache.expire_at("foo", expiration_time) is True
         ttl = cache.ttl("foo")
         assert pytest.approx(ttl, 1) == timedelta(hours=1).total_seconds()
 
         # Test settings expiration time 1 hour ahead by Unix timestamp.
         cache.set("foo", "bar", timeout=None)
-        expiration_time = datetime.datetime.now() + timedelta(hours=2)
+        expiration_time = datetime.datetime.now(tz=datetime.timezone.utc) + timedelta(
+            hours=2
+        )
         assert cache.expire_at("foo", int(expiration_time.timestamp())) is True
         ttl = cache.ttl("foo")
         assert pytest.approx(ttl, 1) == timedelta(hours=1).total_seconds() * 2
 
         # Test settings expiration time 1 hour in the past, which effectively
         # deletes the key.
-        expiration_time = datetime.datetime.now() - timedelta(hours=2)
+        expiration_time = datetime.datetime.now(tz=datetime.timezone.utc) - timedelta(
+            hours=2
+        )
         assert cache.expire_at("foo", expiration_time) is True
         value = cache.get("foo")
         assert value is None
 
-        expiration_time = datetime.datetime.now() + timedelta(hours=2)
+        expiration_time = datetime.datetime.now(tz=datetime.timezone.utc) + timedelta(
+            hours=2
+        )
         assert cache.expire_at("not-existent-key", expiration_time) is False
 
     def test_lock(self, cache: ValkeyCache):
