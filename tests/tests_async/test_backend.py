@@ -10,7 +10,7 @@ import pytest
 from django.core.cache import caches
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.test import override_settings
-from pytest_django.fixtures import SettingsWrapper
+from pytest_django import Settings
 from pytest_mock import MockerFixture
 
 from django_valkey.async_cache.cache import AsyncValkeyCache
@@ -264,7 +264,7 @@ class TestAsyncDjangoValkeyCache:
         self,
         cache: AsyncValkeyCache,
         mocker: MockerFixture,
-        settings: SettingsWrapper,
+        settings: Settings,
     ):
         tmp = await cache.client.get_client(write=True)
         pipeline = await tmp.pipeline()
@@ -575,7 +575,7 @@ class TestAsyncDjangoValkeyCache:
         self,
         patch_itersize_setting,
         cache: AsyncValkeyCache,
-        settings: SettingsWrapper,
+        settings: Settings,
         mocker,
     ):
         client_mock = mocker.patch(
@@ -593,7 +593,7 @@ class TestAsyncDjangoValkeyCache:
             "*foo-a*", itersize=expected_count
         )
 
-    async def test_close(self, cache: AsyncValkeyCache, settings: SettingsWrapper):
+    async def test_close(self, cache: AsyncValkeyCache, settings: Settings):
         settings.DJANGO_VALKEY_CLOSE_CONNECTION = True
         await cache.aset("f", "1")
         await cache.aclose()

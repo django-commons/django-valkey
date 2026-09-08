@@ -1,6 +1,6 @@
 import copy
 
-from pytest_django.fixtures import SettingsWrapper
+from pytest_django import Settings
 from valkey import ValkeyCluster
 
 from django_valkey.cluster_cache.cache import ClusterValkeyCache
@@ -19,7 +19,7 @@ class TestDjangoValkeyCacheEscapePrefix:
         assert "b" not in keys
 
 
-def test_custom_key_function(cache: ClusterValkeyCache, settings: SettingsWrapper):
+def test_custom_key_function(cache: ClusterValkeyCache, settings: Settings):
     caches_setting = copy.deepcopy(settings.CACHES)
     caches_setting["default"]["KEY_FUNCTION"] = "tests.test_cache_options.make_key"
     caches_setting["default"]["REVERSE_KEY_FUNCTION"] = (

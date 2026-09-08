@@ -7,7 +7,7 @@ import pytest
 from django.core.cache import cache as default_cache
 from django.core.cache import caches
 from pytest import LogCaptureFixture
-from pytest_django.fixtures import SettingsWrapper
+from pytest_django import Settings
 from valkey.exceptions import ConnectionError
 
 from django_valkey.async_cache.cache import AsyncValkeyCache
@@ -80,7 +80,7 @@ no_herd_method = {
 @pytest.mark.filterwarnings("ignore:coroutine 'AsyncBackendCommands.close'")
 class TestDjangoValkeyOmitException:
     @pytest.fixture
-    async def conf_cache(self, settings: SettingsWrapper):
+    async def conf_cache(self, settings: Settings):
         caches_settings = copy.deepcopy(settings.CACHES)
         # NOTE: this files raises RuntimeWarning because `conn.close` was not awaited,
         # this is expected because django calls the signal manually during this test
@@ -89,9 +89,7 @@ class TestDjangoValkeyOmitException:
         return caches_settings
 
     @pytest.fixture
-    async def conf_cache_to_ignore_exception(
-        self, settings: SettingsWrapper, conf_cache
-    ):
+    async def conf_cache_to_ignore_exception(self, settings: Settings, conf_cache):
         conf_cache["doesnotexist"]["OPTIONS"]["IGNORE_EXCEPTIONS"] = True
         conf_cache["doesnotexist"]["OPTIONS"]["LOG_IGNORE_EXCEPTIONS"] = True
         settings.DJANGO_VALKEY_IGNORE_EXCEPTIONS = True
@@ -184,9 +182,7 @@ class TestDjangoValkeyOmitException:
             for record in caplog.records
         )
 
-    async def test_get_django_omit_exceptions_priority_1(
-        self, settings: SettingsWrapper
-    ):
+    async def test_get_django_omit_exceptions_priority_1(self, settings: Settings):
         caches_setting = copy.deepcopy(settings.CACHES)
         caches_setting["doesnotexist"]["OPTIONS"]["IGNORE_EXCEPTIONS"] = True
         settings.CACHES = caches_setting
@@ -195,9 +191,7 @@ class TestDjangoValkeyOmitException:
         assert cache._ignore_exceptions is True
         assert await cache.aget("key") is None
 
-    async def test_get_django_omit_exceptions_priority_2(
-        self, settings: SettingsWrapper
-    ):
+    async def test_get_django_omit_exceptions_priority_2(self, settings: Settings):
         caches_setting = copy.deepcopy(settings.CACHES)
         caches_setting["doesnotexist"]["OPTIONS"]["IGNORE_EXCEPTIONS"] = False
         settings.CACHES = caches_setting
@@ -217,7 +211,7 @@ class TestDjangoValkeyOmitException:
 
 @pytest.fixture
 async def key_prefix_cache(
-    cache: AsyncValkeyCache, settings: SettingsWrapper
+    cache: AsyncValkeyCache, settings: Settings
 ) -> Iterable[AsyncValkeyCache]:
     caches_setting = copy.deepcopy(settings.CACHES)
     caches_setting["default"]["KEY_PREFIX"] = "*"
@@ -264,7 +258,7 @@ class TestDjangoValkeyCacheEscapePrefix:
 
 
 @pytest.mark.filterwarnings("ignore:coroutine 'AsyncBackendCommands.close'")
-async def test_custom_key_function(cache: AsyncValkeyCache, settings: SettingsWrapper):
+async def test_custom_key_function(cache: AsyncValkeyCache, settings: Settings):
     caches_setting = copy.deepcopy(settings.CACHES)
     caches_setting["default"]["KEY_FUNCTION"] = "tests.test_cache_options.make_key"
     caches_setting["default"]["REVERSE_KEY_FUNCTION"] = (

@@ -2,7 +2,7 @@ from collections.abc import Iterable
 
 import pytest
 from django.core.cache import DEFAULT_CACHE_ALIAS
-from pytest_django.fixtures import SettingsWrapper
+from pytest_django import Settings
 from pytest_mock import MockerFixture
 
 from django_valkey.async_cache.cache import AsyncValkeyCache
@@ -33,7 +33,7 @@ class TestClientClose:
     async def test_close_disconnect_settings(
         self,
         cache_client: AsyncDefaultClient,
-        settings: SettingsWrapper,
+        settings: Settings,
         mocker: MockerFixture,
     ):
         mock = mocker.patch.object(
@@ -49,7 +49,7 @@ class TestClientClose:
         self,
         cache_client: AsyncDefaultClient,
         mocker: MockerFixture,
-        settings: SettingsWrapper,
+        settings: Settings,
     ):
         mock = mocker.patch.object(
             cache_client.connection_factory, "disconnect", new_callable=mocker.AsyncMock

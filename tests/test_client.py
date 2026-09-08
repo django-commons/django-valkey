@@ -4,7 +4,7 @@ from typing import ClassVar
 import pytest
 from django.core.cache import DEFAULT_CACHE_ALIAS
 from django.core.cache import cache as default_cache
-from pytest_django.fixtures import SettingsWrapper
+from pytest_django import Settings
 from pytest_mock import MockerFixture
 
 from django_valkey.cache import ValkeyCache
@@ -31,7 +31,7 @@ class TestClientClose:
     def test_close_disconnect_settings(
         self,
         cache_client: DefaultClient,
-        settings: SettingsWrapper,
+        settings: Settings,
         mocker: MockerFixture,
     ):
         mock = mocker.patch.object(cache_client.connection_factory, "disconnect")
@@ -44,7 +44,7 @@ class TestClientClose:
         self,
         cache_client: DefaultClient,
         mocker: MockerFixture,
-        settings: SettingsWrapper,
+        settings: Settings,
     ):
         mock = mocker.patch.object(cache_client.connection_factory, "disconnect")
 

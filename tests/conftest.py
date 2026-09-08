@@ -6,7 +6,7 @@ import pytest
 from asgiref.compatibility import iscoroutinefunction
 from django.core.cache import cache as default_cache
 from django.core.cache import caches
-from pytest_django.fixtures import SettingsWrapper
+from pytest_django import Settings
 
 from django_valkey.base import BaseValkeyCache
 from django_valkey.cache import ValkeyCache
@@ -29,9 +29,7 @@ else:
 
 
 @pytest.fixture
-def key_prefix_cache(
-    cache: ValkeyCache, settings: SettingsWrapper
-) -> Iterable[ValkeyCache]:
+def key_prefix_cache(cache: ValkeyCache, settings: Settings) -> Iterable[ValkeyCache]:
     caches_setting = copy.deepcopy(settings.CACHES)
     caches_setting["default"]["KEY_PREFIX"] = "*"
     settings.CACHES = caches_setting

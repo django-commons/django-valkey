@@ -9,7 +9,7 @@ import pytest
 from django.core.cache import caches
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.test import override_settings
-from pytest_django.fixtures import SettingsWrapper
+from pytest_django import Settings
 from pytest_mock import MockerFixture
 
 from django_valkey.cache import ValkeyCache
@@ -287,7 +287,7 @@ class TestDjangoValkeyCache:
         self,
         cache: ValkeyCache,
         mocker: MockerFixture,
-        settings: SettingsWrapper,
+        settings: Settings,
     ):
         if isinstance(cache.client, ShardClient):
             pytest.skip("ShardClient doesn't support get_client")
@@ -604,7 +604,7 @@ class TestDjangoValkeyCache:
         self,
         patch_itersize_setting,
         cache: ValkeyCache,
-        settings: SettingsWrapper,
+        settings: Settings,
         mocker,
     ):
         client_mock = mocker.patch("django_valkey.cache.ValkeyCache.client")
@@ -622,7 +622,7 @@ class TestDjangoValkeyCache:
             "*foo-a*", itersize=expected_count
         )
 
-    def test_close(self, cache: ValkeyCache, settings: SettingsWrapper):
+    def test_close(self, cache: ValkeyCache, settings: Settings):
         settings.DJANGO_VALKEY_CLOSE_CONNECTION = True
         cache.set("f", "1")
         cache.close()
