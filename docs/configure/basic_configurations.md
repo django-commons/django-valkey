@@ -12,9 +12,9 @@ CACHES = {
     "default": {
         "BACKEND": "django_valkey.cache.ValkeyCache",
         "LOCATION": "valkey://127.0.0.1:6379",
-        "OPTIONS": {...}
-        }
+        "OPTIONS": {...},
     }
+}
 ```
 
 django-valkey uses the valkey-py native URL notation for connection strings, it allows better interoperability and has a connection string in more "standard" way. will explore this more in [Advanced Configurations](advanced_configurations.md).
@@ -41,9 +41,7 @@ CACHES = {
     "default": {
         "BACKEND": "django-valkey.cache.ValkeyCache",
         "LOCATION": "valkey://django@localhost:6379/0",
-        "OPTIONS": {
-            "PASSWORD": "mysecret"
-        }
+        "OPTIONS": {"PASSWORD": "mysecret"},
     }
 }
 ```    
