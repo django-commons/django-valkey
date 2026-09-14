@@ -13,7 +13,7 @@ raw_client = get_valkey_connection("default")
 in this example `"default"` is the alias name of the backend, that you configured in django's `CACHES` setting
 the signature of the function is as follows:
 ```python
-def get_valkey_connection(alias: str="default", write: bool=True, key=None): ...
+def get_valkey_connection(alias: str = "default", write: bool = True, key=None): ...
 ```
 
 `alias` is the name you gave each server in django's `CACHES` setting.
@@ -43,13 +43,15 @@ from django_valkey.util import make_key, make_pattern, encode, decode
 `make_key` was an internal method, but as of v0.3.0 it's a function you can use easily
 
 ```python
-from django.core.cache.backends.base import default_key_func  # this is the default key func, if you are using a custom one, use that instead
+from django.core.cache.backends.base import (
+    default_key_func,
+)  # this is the default key func, if you are using a custom one, use that instead
 from django_valkey.util import make_key
 
 make_key(
-    key="my_key", 
+    key="my_key",
     key_func=default_key_func,  # the default key func, customize based on your configs
-    version=1,   # 1 is default, customize it based on your configs
+    version=1,  # 1 is default, customize it based on your configs
     prefix="",  # default prefix, customize based on your config
 )
 ```
@@ -78,13 +80,15 @@ for example `foo*` will match `foo1`, `foo2`, `foo_something` and so one
 to use `make_pattern` notice the following example
 
 ```python
-from django.core.cache.backends.base import default_key_func  # this is the default key func, if you are using a custom one, use that instead
+from django.core.cache.backends.base import (
+    default_key_func,
+)  # this is the default key func, if you are using a custom one, use that instead
 from django_valkey.util import make_pattern
 
 make_pattern(
     pattern="my_*",
     key_func=default_key_func,  # the default key func, customize based on your configs
-    version=1,   # 1 is default, customize it based on your configs
+    version=1,  # 1 is default, customize it based on your configs
     prefix="",  # default prefix, customize based on your config
 )
 ```
@@ -119,8 +123,16 @@ from django.core.cache import cache
 
 from django_valkey.util import encode, decode
 
-encode(value="my_value", serializer=cache.client._serializer, compressor=cache.client._compressor)
-decode(value="my_value", serializer=cache.client._serializer, compressor=cache.client._compressor)
+encode(
+    value="my_value",
+    serializer=cache.client._serializer,
+    compressor=cache.client._compressor,
+)
+decode(
+    value="my_value",
+    serializer=cache.client._serializer,
+    compressor=cache.client._compressor,
+)
 ```
 
 if you want to pass in the serializer and compressor by hand, you can instantiate one of the classes we provide and pass in the object, or instantiate your custom class,
