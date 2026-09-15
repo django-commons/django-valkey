@@ -1,8 +1,7 @@
 import sys
 
 try:
-    from lz4.frame import compress
-    from lz4.frame import decompress
+    from lz4.frame import compress, decompress
 except ImportError:  # python-lz4/python-lz4#302
     if sys.version_info >= (3, 14):
         compress = decompress = None

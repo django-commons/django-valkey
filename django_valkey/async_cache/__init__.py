@@ -18,6 +18,7 @@ async def get_valkey_connection(alias="default", write=True):
         raise NotImplementedError(error_message)
 
     if not iscoroutinefunction(cache.client.get_client):
-        raise "use django_valkey.get_valkey_connection for sync backends"
+        error_message = "use django_valkey.get_valkey_connection for sync backends"
+        raise TypeError(error_message)
 
     return await cache.client.get_client(write)

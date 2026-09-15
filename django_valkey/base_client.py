@@ -1,3 +1,4 @@
+import builtins
 import contextlib
 import random
 import re
@@ -5,15 +6,11 @@ import socket
 import time
 from collections.abc import AsyncGenerator, Iterable, Iterator
 from typing import (
-    Any,
-    Dict,
-    List,
-    Set,
-    Tuple,
-    cast,
     TYPE_CHECKING,
+    Any,
     Generic,
     TypeVar,
+    cast,
 )
 
 from django.conf import settings
@@ -21,10 +18,13 @@ from django.core.cache.backends.base import DEFAULT_TIMEOUT, get_key_func
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
 from django.utils.version import PY313
-
 from valkey.exceptions import (
     ConnectionError as ValkeyConnectionError,
+)
+from valkey.exceptions import (
     ResponseError,
+)
+from valkey.exceptions import (
     TimeoutError as ValkeyTimeoutError,
 )
 from valkey.typing import AbsExpiryT, EncodableT, ExpiryT, KeyT, PatternT
@@ -37,8 +37,9 @@ from django_valkey.serializers.pickle import PickleSerializer
 from django_valkey.util import CacheKey, decode, encode, make_key, make_pattern
 
 if TYPE_CHECKING:
-    from valkey.lock import Lock
     from valkey.asyncio.lock import Lock as AsyncLock
+    from valkey.lock import Lock
+
     from django_valkey.cache import ValkeyCache
 
 
@@ -68,7 +69,7 @@ class BaseClient(Generic[Backend]):
     def __init__(
         self,
         server: str | Iterable,
-        params: Dict[str, Any],
+        params: dict[str, Any],
         backend: "ValkeyCache",
     ) -> None:
         self._backend = backend
@@ -86,7 +87,7 @@ class BaseClient(Generic[Backend]):
             or "django_valkey.util.default_reverse_key"
         )
 
-        self._clients: List[Backend | Any | None] = [None] * len(self._server)
+        self._clients: list[Backend | Any | None] = [None] * len(self._server)
         self._options: dict = params.get("OPTIONS", {})
         self._replica_read_only = self._options.get("REPLICA_READ_ONLY", True)
 
@@ -121,7 +122,7 @@ class BaseClient(Generic[Backend]):
         )
 
     def get_next_client_index(
-        self, write: bool = True, tried: List[int] | None = None
+        self, write: bool = True, tried: list[int] | None = None
     ) -> int:
         """
         Return a next index for read client. This function implements a default
@@ -137,7 +138,7 @@ class BaseClient(Generic[Backend]):
             tried = []
 
         if tried and len(tried) < len(self._server):
-            not_tried = [i for i in range(0, len(self._server)) if i not in tried]
+            not_tried = [i for i in range(len(self._server)) if i not in tried]
             return random.choice(not_tried)
 
         return random.randint(1, len(self._server) - 1)
@@ -159,7 +160,7 @@ class BaseClient(Generic[Backend]):
 
     def _decode_iterable_result(
         self, result: Any, convert_to_set: bool = True
-    ) -> List[Any] | Any | None:
+    ) -> list[Any] | Any | None:
         if result is None:
             return None
         if isinstance(result, list):
@@ -202,7 +203,7 @@ class ClientCommands(Generic[Backend]):
     def get_client(
         self: BaseClient,
         write: bool = True,
-        tried: List[int] | None = None,
+        tried: list[int] | None = None,
         **kwargs,
     ) -> Backend | Any:
         """
@@ -222,8 +223,8 @@ class ClientCommands(Generic[Backend]):
     def get_client_with_index(
         self: BaseClient,
         write: bool = True,
-        tried: List[int] | None = None,
-    ) -> Tuple[Backend | Any, int]:
+        tried: list[int] | None = None,
+    ) -> tuple[Backend | Any, int]:
         """
         Method used for obtain a raw valkey client.
 
@@ -262,7 +263,7 @@ class ClientCommands(Generic[Backend]):
         self: BaseClient,
         key: KeyT,
         value: EncodableT,
-        timeout: int | float | None = DEFAULT_TIMEOUT,
+        timeout: float | None = DEFAULT_TIMEOUT,
         version: int | None = None,
         client: Backend | Any | None = None,
         nx: bool = False,
@@ -281,7 +282,7 @@ class ClientCommands(Generic[Backend]):
             timeout = self._backend.default_timeout
 
         original_client = client
-        tried: List[int] = []
+        tried: list[int] = []
         while True:
             try:
                 if client is None:
@@ -352,7 +353,7 @@ class ClientCommands(Generic[Backend]):
         delta: int = 1,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> Tuple:
+    ) -> tuple:
         if version is None:
             version = self._backend.version
 
@@ -688,7 +689,7 @@ class ClientCommands(Generic[Backend]):
 
     def set_many(
         self: BaseClient,
-        data: Dict[KeyT, EncodableT],
+        data: dict[KeyT, EncodableT],
         timeout: float | None = DEFAULT_TIMEOUT,
         version: int | None = None,
         client: Backend | Any | None = None,
@@ -712,7 +713,7 @@ class ClientCommands(Generic[Backend]):
 
     def mset(
         self: BaseClient,
-        data: Dict[KeyT, Any],
+        data: dict[KeyT, Any],
         timeout: float | None = None,
         version: int | None = None,
         client: Backend | None = None,
@@ -916,7 +917,7 @@ class ClientCommands(Generic[Backend]):
         search: str,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> List[Any]:
+    ) -> list[Any]:
         """
         Execute KEYS command and return matched results.
         Warning: this can return huge number of results, in
@@ -969,7 +970,7 @@ class ClientCommands(Generic[Backend]):
         *keys: KeyT,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> Set[Any]:
+    ) -> builtins.set[Any]:
         client = self._get_client(write=False, client=client)
 
         nkeys = [self.make_key(key, version=version) for key in keys]
@@ -1000,7 +1001,7 @@ class ClientCommands(Generic[Backend]):
         *keys: KeyT,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> Set[Any]:
+    ) -> builtins.set[Any]:
         client = self._get_client(write=False, client=client)
 
         nkeys = [self.make_key(key, version=version) for key in keys]
@@ -1031,7 +1032,7 @@ class ClientCommands(Generic[Backend]):
         *members: Any,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> List[bool]:
+    ) -> list[bool]:
         key = self.make_key(key, version=version)
 
         client = self._get_client(write=False, client=client, key=key)
@@ -1065,7 +1066,7 @@ class ClientCommands(Generic[Backend]):
         key: KeyT,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> Set[Any]:
+    ) -> builtins.set[Any]:
         key = self.make_key(key, version=version)
 
         client = self._get_client(write=False, client=client, key=key)
@@ -1100,7 +1101,7 @@ class ClientCommands(Generic[Backend]):
         count: int | None = None,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> Set | Any:
+    ) -> builtins.set | Any:
         nkey = self.make_key(key, version=version)
 
         client = self._get_client(write=True, client=client, key=nkey)
@@ -1117,7 +1118,7 @@ class ClientCommands(Generic[Backend]):
         count: int | None = None,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> List | Any:
+    ) -> list | Any:
         key = self.make_key(key, version=version)
 
         client = self._get_client(write=False, client=client, key=key)
@@ -1152,7 +1153,7 @@ class ClientCommands(Generic[Backend]):
         count: int = 10,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> Set[Any]:
+    ) -> builtins.set[Any]:
         if self._has_compression_enabled() and match:
             err_msg = "Using match with compression is not supported."
             raise ValueError(err_msg)
@@ -1162,7 +1163,7 @@ class ClientCommands(Generic[Backend]):
         client = self._get_client(write=False, client=client, key=key)
 
         try:
-            cursor, result = client.sscan(
+            _cursor, result = client.sscan(
                 key,
                 match=cast(PatternT, self.encode(match)) if match else None,
                 count=count,
@@ -1202,7 +1203,7 @@ class ClientCommands(Generic[Backend]):
         *keys: KeyT,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> Set[Any]:
+    ) -> builtins.set[Any]:
         client = self._get_client(write=False, client=client)
 
         nkeys = [self.make_key(key, version=version) for key in keys]
@@ -1346,7 +1347,7 @@ class ClientCommands(Generic[Backend]):
         self: BaseClient,
         name: str,
         client: Backend | Any | None = None,
-    ) -> List[Any]:
+    ) -> list[Any]:
         """
         Return a list of keys in hash name.
         """
@@ -1532,7 +1533,7 @@ class AsyncClientCommands(Generic[Backend]):
         self,
         key,
         value,
-        timeout: float | int | None = DEFAULT_TIMEOUT,
+        timeout: float | None = DEFAULT_TIMEOUT,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> bool:
@@ -1639,7 +1640,7 @@ class AsyncClientCommands(Generic[Backend]):
         self,
         key,
         version: int | None = None,
-        timeout: float | int | None = None,
+        timeout: float | None = None,
         sleep: float = 0.1,
         blocking: bool = True,
         blocking_timeout: float | None = None,
@@ -1800,7 +1801,7 @@ class AsyncClientCommands(Generic[Backend]):
     async def set_many(
         self,
         data: dict,
-        timeout: float | int | None = None,
+        timeout: float | None = None,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> None:
@@ -1816,7 +1817,7 @@ class AsyncClientCommands(Generic[Backend]):
 
     async def mset(
         self,
-        data: Dict[KeyT, Any],
+        data: dict[KeyT, Any],
         timeout: float | None = None,
         version: int | None = None,
         client: Backend | None = None,
@@ -2041,7 +2042,7 @@ class AsyncClientCommands(Generic[Backend]):
 
     async def sdiff(
         self, *keys, version: int | None = None, client: Backend | Any | None = None
-    ) -> Set[Any]:
+    ) -> builtins.set[Any]:
         client = await self._get_client(write=False, client=client)
         nkeys = [self.make_key(key, version=version) for key in keys]
         try:
@@ -2067,7 +2068,7 @@ class AsyncClientCommands(Generic[Backend]):
 
     async def sinter(
         self, *keys, version: int | None = None, client: Backend | Any | None = None
-    ) -> Set[Any]:
+    ) -> builtins.set[Any]:
         client = await self._get_client(write=False, client=client)
         nkeys = [self.make_key(key, version=version) for key in keys]
         try:
@@ -2128,7 +2129,7 @@ class AsyncClientCommands(Generic[Backend]):
 
     async def smembers(
         self, key, version: int | None = None, client: Backend | Any | None = None
-    ) -> Set[Any]:
+    ) -> builtins.set[Any]:
         client = await self._get_client(write=False, client=client)
 
         key = self.make_key(key, version=version)
@@ -2160,7 +2161,7 @@ class AsyncClientCommands(Generic[Backend]):
         count: int | None = None,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> Set | Any:
+    ) -> builtins.set | Any:
         client = await self._get_client(write=True, client=client)
         nkey = self.make_key(key, version=version)
         try:
@@ -2207,7 +2208,7 @@ class AsyncClientCommands(Generic[Backend]):
         count: int = 10,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> Set[Any]:
+    ) -> builtins.set[Any]:
         # TODO check this is correct
         if self._has_compression_enabled() and match:
             error_message = "Using match with compression is not supported."
@@ -2217,7 +2218,7 @@ class AsyncClientCommands(Generic[Backend]):
 
         key = self.make_key(key, version=version)
         try:
-            cursor, result = await client.sscan(
+            _cursor, result = await client.sscan(
                 key,
                 match=cast(PatternT, self.encode(match)) if match else None,
                 count=count,
@@ -2260,7 +2261,7 @@ class AsyncClientCommands(Generic[Backend]):
         *keys,
         version: int | None = None,
         client: Backend | Any | None = None,
-    ) -> Set[Any]:
+    ) -> builtins.set[Any]:
         client = await self._get_client(write=False, client=client)
 
         nkeys = [self.make_key(key, version=version) for key in keys]
@@ -2308,7 +2309,7 @@ class AsyncClientCommands(Generic[Backend]):
     async def touch(
         self,
         key,
-        timeout: float | int | None = DEFAULT_TIMEOUT,
+        timeout: float | None = DEFAULT_TIMEOUT,
         version: int | None = None,
         client: Backend | Any | None = None,
     ) -> bool:
@@ -2432,17 +2433,13 @@ class Marker:
     marker for herded keys.
     """
 
-    pass
-
 
 def _is_expired(x, herd_timeout: int) -> bool:
     if x >= herd_timeout:
         return True
     val = x + random.randint(1, herd_timeout)
 
-    if val >= herd_timeout:
-        return True
-    return False
+    return val >= herd_timeout
 
 
 class HerdCommonMethods:

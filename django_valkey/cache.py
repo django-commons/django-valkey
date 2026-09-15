@@ -1,8 +1,8 @@
 from valkey import Valkey
 
 from django_valkey.base import (
-    BaseValkeyCache,
     BackendCommands,
+    BaseValkeyCache,
     decorate_all_methods,
     omit_exception,
 )

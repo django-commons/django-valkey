@@ -84,8 +84,7 @@ def omit_exception(
     @functools.wraps(method)
     def _generator_decorator(self, *args, **kwargs):
         try:
-            for item in method(self, *args, **kwargs):
-                yield item
+            yield from method(self, *args, **kwargs)
         except ConnectionInterrupted as e:
             yield __handle_error(self, e)
 
@@ -594,8 +593,8 @@ class AsyncBackendCommands:
 
 # temp fix for django's #36047
 # TODO: remove this when it's fixed in django
-from django.core import signals  # noqa: E402
-from django.core.cache import caches, close_caches  # noqa: E402
+from django.core import signals
+from django.core.cache import caches, close_caches
 
 
 async def close_async_caches(**kwargs):

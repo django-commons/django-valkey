@@ -55,10 +55,9 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_valkey.client.SentinelClient",
             "SENTINELS": SENTINELS,
-
             # optional
-            "SENTINEL_KWARGS": {}
-        }
+            "SENTINEL_KWARGS": {},
+        },
     }
 }
 ```
@@ -76,7 +75,7 @@ CACHES = {
         "LOCATION": ["valkey://127.0.0.1:6379"],
         "OPTIONS": {
             "CLIENT_CLASS": "django_valkey.async_cache.client.AsyncHerdClient",
-        }
+        },
     }
 }
 ```        
@@ -103,7 +102,9 @@ CACHE_HERD_TIMEOUT = 20  # if not set, it's default to 60
 or set it as the global connection factory like this:
 
 ```python
-DJANGO_VALKEY_CONNECTION_FACTORY = "django_valkey.async_cache.client.default.AsyncDefaultClient"
+DJANGO_VALKEY_CONNECTION_FACTORY = (
+    "django_valkey.async_cache.client.default.AsyncDefaultClient"
+)
 ```    
 
 note that `"CONNECTION_FACTORY"` overrides `DJANGO_VALKEY_CONNECTION_FACTORY` for the specified server.

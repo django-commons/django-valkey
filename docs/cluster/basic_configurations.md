@@ -12,9 +12,9 @@ CACHES = {
     "default": {
         "BACKEND": "django_valkey.cluster_cache.cache.ClusterValkeyCache",
         "LOCATION": "valkey://127.0.0.1:6379",
-        "OPTIONS": {...}
-        }
+        "OPTIONS": {...},
     }
+}
 ```
 
 you need to point to at least one of the cluster nodes in `LOCATION`, or pass a list of multiple nodes

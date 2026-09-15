@@ -2,7 +2,7 @@ from collections.abc import Iterable
 from typing import Any
 
 from valkey import Valkey
-from valkey.typing import KeyT, EncodableT
+from valkey.typing import EncodableT, KeyT
 
 from django_valkey.base_client import (
     DEFAULT_TIMEOUT,

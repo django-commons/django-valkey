@@ -1,6 +1,6 @@
 from valkey.asyncio import Valkey as AValkey
 
-from django_valkey.base_client import BaseClient, AsyncClientCommands
+from django_valkey.base_client import AsyncClientCommands, BaseClient
 from django_valkey.commands.hash import AsyncHashCommands
 
 

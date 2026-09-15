@@ -2,7 +2,7 @@ import re
 from contextlib import suppress
 from typing import Any
 
-from valkey.typing import KeyT, EncodableT
+from valkey.typing import EncodableT, KeyT
 
 from django_valkey.compressors.base import BaseCompressor
 from django_valkey.exceptions import CompressorError

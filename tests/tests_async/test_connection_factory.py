@@ -1,10 +1,8 @@
 import pytest
-
 from django.core.exceptions import ImproperlyConfigured
 
 from django_valkey import pool as sync_pool
 from django_valkey.async_cache import pool
-
 
 pytestmark = pytest.mark.anyio
 

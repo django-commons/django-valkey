@@ -4,13 +4,12 @@ from urllib.parse import parse_qs, urlparse
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
-
 from valkey import Valkey
 from valkey._parsers.url_parser import to_bool
 from valkey.connection import ConnectionPool, DefaultParser
 from valkey.sentinel import Sentinel
 
-from django_valkey.base_pool import BaseConnectionFactory, Base
+from django_valkey.base_pool import Base, BaseConnectionFactory
 
 
 class ConnectionFactory(BaseConnectionFactory[Valkey, ConnectionPool]):

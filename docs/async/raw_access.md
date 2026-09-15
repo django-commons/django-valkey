@@ -13,7 +13,7 @@ raw_client = await get_valkey_connection("default")
 in this example `"default"` is the alias name of the backend, that you configured in django's `CACHES` setting
 the signature of the function is as follows:
 ```python
-async def get_valkey_connection(alias: str="default", write: bool=True): ...
+async def get_valkey_connection(alias: str = "default", write: bool = True): ...
 ```
 
 `alias` is the name you gave each server in django's `CACHES` setting.
