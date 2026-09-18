@@ -38,9 +38,9 @@ jobs:
           - '3.13'
           - '3.14'
         django-version:
-          - 'django==4.2'
           - 'django==5.2'
           - 'django==6.0'
+          - 'django==6.1'
 
         include:
           - python-version: '3.13'
@@ -55,6 +55,10 @@ jobs:
             django-version: 'django==6.0'
           - python-version: '3.11'
             django-version: 'django==6.0'
+          - python-version: '3.10'
+            django-version: 'django==6.1'
+          - python-version: '3.11'
+            django-version: 'django==6.1'
 
     env:
       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
