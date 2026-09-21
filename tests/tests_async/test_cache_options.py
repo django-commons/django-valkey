@@ -11,7 +11,7 @@ from pytest_django import Settings
 from valkey.exceptions import ConnectionError
 
 from django_valkey.async_cache.cache import AsyncValkeyCache
-from django_valkey.async_cache.client import AsyncDefaultClient, AsyncHerdClient
+from django_valkey.async_cache.client import AsyncDefaultClient
 
 pytestmark = pytest.mark.anyio
 
@@ -70,11 +70,6 @@ iter_methods = {
     "sscan_iter",
 }
 
-no_herd_method = {
-    "incr",
-    "decr",
-}
-
 
 # TODO: when django adjusts the signal, remove this decorator (and the ones below)
 @pytest.mark.filterwarnings("ignore:coroutine 'AsyncBackendCommands.close'")
@@ -115,11 +110,6 @@ class TestDjangoValkeyOmitException:
         for m in methods_with_one_required_parameters:
             method = getattr(ignore_exceptions_cache, m)
             with subtests.test(method=method):
-                if (
-                    isinstance(default_cache.client, AsyncHerdClient)
-                    and m in no_herd_method
-                ):
-                    pytest.skip(f"herd client doesn't support {m}")
                 await method("abc")
 
     async def test_methods_with_two_argument_omit_exception(

@@ -9,7 +9,7 @@ from pytest_django import Settings
 from valkey.exceptions import ConnectionError
 
 from django_valkey.cache import ValkeyCache
-from django_valkey.client import DefaultClient, HerdClient, ShardClient
+from django_valkey.client import DefaultClient
 from django_valkey.cluster_cache.client import DefaultClusterClient
 
 
@@ -76,16 +76,6 @@ iter_methods = {
     "sscan_iter",
 }
 
-no_shard_methods = {
-    "mget",
-    "mset",
-    "iter_keys",
-}
-no_herd_method = {
-    "incr",
-    "decr",
-}
-
 
 @pytest.mark.skipif(
     isinstance(default_cache.client, DefaultClusterClient),
@@ -123,15 +113,6 @@ class TestDjangoValkeyOmitException:
         for m in methods_with_one_required_parameters:
             method = getattr(ignore_exceptions_cache, m)
             with subtests.test(method=method):
-                if (
-                    isinstance(default_cache.client, ShardClient)
-                    and m in no_shard_methods
-                ):
-                    pytest.skip(f"shard client doesn't support {m}")
-                elif (
-                    isinstance(default_cache.client, HerdClient) and m in no_herd_method
-                ):
-                    pytest.skip(f"herd client doesn't support {m}")
                 method("abc")
 
     def test_methods_with_two_argument_omit_exception(
@@ -139,8 +120,6 @@ class TestDjangoValkeyOmitException:
     ):
         for m in methods_with_two_required_parameters:
             method = getattr(ignore_exceptions_cache, m)
-            if isinstance(default_cache.client, ShardClient) and m in no_shard_methods:
-                pytest.skip(f"shard client doesn't support {m}")
             with subtests.test(method=method):
                 method("abc", 1)
 
@@ -162,22 +141,12 @@ class TestDjangoValkeyOmitException:
         for m in methods_taking_dictionary:
             method = getattr(ignore_exceptions_cache, m)
             with subtests.test(method=method):
-                if (
-                    isinstance(default_cache.client, ShardClient)
-                    and m in no_shard_methods
-                ):
-                    pytest.skip(f"shard client doesn't support {m}")
                 method({"abc": "def"})
 
     def test_iterator_methods(self, ignore_exceptions_cache: ValkeyCache, subtests):
         for m in iter_methods:
             method = getattr(ignore_exceptions_cache, m)
             with subtests.test(method=method):
-                if (
-                    isinstance(default_cache.client, ShardClient)
-                    and m in no_shard_methods
-                ):
-                    pytest.skip(f"shard client doesn't support {m}")
                 for _ in method("abc"):
                     pass
 
@@ -244,9 +213,6 @@ class TestDjangoValkeyCacheEscapePrefix:
     def test_iter_keys(
         self, key_prefix_cache: ValkeyCache, with_prefix_cache: ValkeyCache
     ):
-        if isinstance(key_prefix_cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support iter_keys")
-
         key_prefix_cache.set("a", "1")
         with_prefix_cache.set("b", "2")
         assert list(key_prefix_cache.iter_keys("*")) == ["a"]
@@ -274,9 +240,6 @@ def test_custom_key_function(cache: ValkeyCache, settings: Settings):
         "tests.test_cache_options.reverse_key"
     )
     settings.CACHES = caches_setting
-
-    if isinstance(cache.client, ShardClient):
-        pytest.skip("ShardClient doesn't support get_client")
 
     for key in ["foo-aa", "foo-ab", "foo-bb", "foo-bc"]:
         cache.set(key, "foo")
