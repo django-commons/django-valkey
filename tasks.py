@@ -7,7 +7,7 @@ from invoke import task
 @task
 def devenv(c):
     clean(c)
-    cmd = "docker compose --profile all up -d"
+    cmd = "docker compose --profile all up -d --wait --wait-timeout 120"
     c.run(cmd)
 
 

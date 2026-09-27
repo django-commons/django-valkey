@@ -52,8 +52,7 @@ Requirements
 ~~~~~~~~~~~~
 
 - `Python`_ 3.10+
-- `Django`_ 4.2.20+
-    - `Django~=5.0` and `Django~=5.1` are not supported, because they are end of life: https://endoflife.date/django
+- `Django`_ 5.2+ (Django 4.2, 5.0 and 5.1 are end of life: https://endoflife.date/django)
 - `valkey-py`_ 6.0.2+
 - `Valkey server`_ 7.2.6+
 
