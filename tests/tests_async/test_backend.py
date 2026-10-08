@@ -16,6 +16,7 @@ from pytest_mock import MockerFixture
 from django_valkey.async_cache.cache import AsyncValkeyCache
 from django_valkey.serializers.json import JSONSerializer
 from django_valkey.serializers.msgpack import MSGPackSerializer
+from tests.conftest import Expiry
 
 pytestmark = pytest.mark.anyio
 
@@ -61,19 +62,19 @@ class TestAsyncDjangoValkeyCache:
         res = await cache.get("test_key_nx")
         assert res is None
 
-    async def test_setnx_timeout(self, cache: AsyncValkeyCache):
+    async def test_setnx_timeout(self, cache: AsyncValkeyCache, expiry: Expiry):
         # test that timeout still works for nx=True
-        res = await cache.aset("test_key_nx", 1, timeout=2, nx=True)
+        res = await cache.aset("test_key_nx", 1, timeout=expiry.timeout, nx=True)
         assert res is True
-        await anyio.sleep(3)
+        await anyio.sleep(expiry.wait)
         res = await cache.aget("test_key_nx")
         assert res is None
 
         # test that timeout will not affect key, if it was there
         await cache.aset("test_key_nx", 1)
-        res = await cache.aset("test_key_nx", 2, timeout=2, nx=True)
+        res = await cache.aset("test_key_nx", 2, timeout=expiry.timeout, nx=True)
         assert res is None
-        await anyio.sleep(3)
+        await anyio.sleep(expiry.wait)
         res = await cache.aget("test_key_nx")
         assert res == 1
 
@@ -144,9 +145,17 @@ class TestAsyncDjangoValkeyCache:
         assert isinstance(res, float)
         assert res == float_val
 
-    async def test_timeout(self, cache: AsyncValkeyCache):
-        await cache.aset("test_key", 222, timeout=3)
-        await anyio.sleep(4)
+    async def test_timeout(self, cache: AsyncValkeyCache, expiry: Expiry):
+        await cache.aset("test_key", 222, timeout=expiry.timeout)
+        await anyio.sleep(expiry.wait)
+
+        res = await cache.aget("test_key")
+        assert res is None
+
+    async def test_timeout_whole_seconds(self, cache: AsyncValkeyCache):
+        await cache.aset("test_key", 222, timeout=1)
+        assert await cache.aget("test_key") == 222
+        await anyio.sleep(1.5)
 
         res = await cache.aget("test_key")
         assert res is None
@@ -156,16 +165,23 @@ class TestAsyncDjangoValkeyCache:
         res = await cache.aget("test_key")
         assert res is None
 
+    async def test_fractional_timeout(self, cache: AsyncValkeyCache):
+        await cache.aset("test_key", 222, timeout=0.5)
+        assert await cache.aget("test_key") == 222
+
+        await cache.aset("test_key", 222, timeout=1.5)
+        assert 1000 < await cache.apttl("test_key") <= 1500
+
     async def test_timeout_parameter_as_positional_argument(
-        self, cache: AsyncValkeyCache
+        self, cache: AsyncValkeyCache, expiry: Expiry
     ):
         await cache.aset("test_key", 222, -1)
         res = await cache.aget("test_key")
         assert res is None
 
-        await cache.aset("test_key", 222, 1)
+        await cache.aset("test_key", 222, expiry.timeout)
         res1 = await cache.aget("test_key")
-        await anyio.sleep(2)
+        await anyio.sleep(expiry.wait)
         res2 = await cache.aget("test_key")
         assert res1 == 222
         assert res2 is None
@@ -803,12 +819,14 @@ class TestAsyncDjangoValkeyCache:
         res = await cache.aget("test_key")
         assert res is None
 
-    async def test_touch_positive_timeout(self, cache: AsyncValkeyCache):
+    async def test_touch_positive_timeout(
+        self, cache: AsyncValkeyCache, expiry: Expiry
+    ):
         await cache.aset("test_key", 222, timeout=10)
 
-        assert await cache.atouch("test_key", 2) is True
+        assert await cache.atouch("test_key", expiry.timeout) is True
         assert await cache.aget("test_key") == 222
-        await anyio.sleep(3)
+        await anyio.sleep(expiry.wait)
         assert await cache.aget("test_key") is None
 
     async def test_touch_negative_timeout(self, cache: AsyncValkeyCache):
@@ -821,23 +839,23 @@ class TestAsyncDjangoValkeyCache:
     async def test_touch_missed_key(self, cache: AsyncValkeyCache):
         assert await cache.atouch("test_key_does_not_exist", 1) is False
 
-    async def test_touch_forever(self, cache: AsyncValkeyCache):
-        await cache.aset("test_key", "foo", timeout=1)
+    async def test_touch_forever(self, cache: AsyncValkeyCache, expiry: Expiry):
+        await cache.aset("test_key", "foo", timeout=expiry.timeout)
         result = await cache.atouch("test_key", None)
         assert result is True
         assert await cache.attl("test_key") is None
-        await anyio.sleep(2)
+        await anyio.sleep(expiry.wait)
         assert await cache.aget("test_key") == "foo"
 
     async def test_touch_forever_nonexistent(self, cache: AsyncValkeyCache):
         result = await cache.atouch("test_key_does_not_exist", None)
         assert result is False
 
-    async def test_touch_default_timeout(self, cache: AsyncValkeyCache):
-        await cache.aset("test_key", "foo", timeout=1)
+    async def test_touch_default_timeout(self, cache: AsyncValkeyCache, expiry: Expiry):
+        await cache.aset("test_key", "foo", timeout=expiry.timeout)
         result = await cache.atouch("test_key")
         assert result is True
-        await anyio.sleep(2)
+        await anyio.sleep(expiry.wait)
         assert await cache.aget("test_key") == "foo"
 
     async def test_clear(self, cache: AsyncValkeyCache):
