@@ -6,6 +6,7 @@ from django.core.cache import cache as default_cache
 from django.core.cache import caches
 from pytest import LogCaptureFixture
 from pytest_django import Settings
+from valkey.credentials import CredentialProvider
 from valkey.exceptions import ConnectionError
 
 from django_valkey.cache import ValkeyCache
@@ -290,3 +291,26 @@ def test_custom_key_function(cache: ValkeyCache, settings: Settings):
     assert {k.decode() for k in cache.client.get_client(write=False).keys("*")} == (
         {"#1#foo-bc", "#1#foo-bb"}
     )
+
+
+class CountingCredentialProvider(CredentialProvider):
+    def __init__(self):
+        self.calls = 0
+
+    def get_credentials(self):
+        self.calls += 1
+        # The test servers have no password, and a passwordless user accepts
+        # any password, so this exercises AUTH without needing a real secret.
+        return "default", "token"
+
+
+def test_credential_provider(cache: ValkeyCache, settings: Settings):
+    provider = CountingCredentialProvider()
+    caches_setting = copy.deepcopy(settings.CACHES)
+    caches_setting["default"].setdefault("OPTIONS", {})
+    caches_setting["default"]["OPTIONS"]["CREDENTIAL_PROVIDER"] = provider
+    settings.CACHES = caches_setting
+
+    cache.set("foo", "bar")
+    assert cache.get("foo") == "bar"
+    assert provider.calls > 0
