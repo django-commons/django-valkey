@@ -22,7 +22,10 @@ class GzipCompressor(BaseCompressor):
     """
 
     def _compress(self, value: bytes) -> bytes:
-        return gzip.compress(value, compresslevel=self.level or 9)
+        # mtime=0 keeps the output the same for the same input; by default gzip
+        # writes the current time into the header, so set members compressed
+        # in different seconds would never match.
+        return gzip.compress(value, compresslevel=self.level or 9, mtime=0)
 
     def _decompress(self, value: bytes) -> bytes:
         return gzip.decompress(value)
