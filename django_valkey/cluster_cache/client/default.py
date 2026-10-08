@@ -74,8 +74,6 @@ class DefaultClusterClient(ClientCommands, BaseClient[ValkeyCluster]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
-    set_many = mset_nonatomic
-
     def mget_nonatomic(self, keys, version=None, client=None):
         client = self._get_client(client=client)
         map_keys = {self.make_key(k, version=version): k for k in keys}
@@ -84,8 +82,9 @@ class DefaultClusterClient(ClientCommands, BaseClient[ValkeyCluster]):
         except _main_exceptions as e:
             raise ConnectionInterrupted(connection=client) from e
 
+        # values line up with map_keys, which drops repeated keys
         recovered_data = {}
-        for key, value in zip(keys, values):
+        for key, value in zip(map_keys.values(), values):
             if value is None:
                 continue
             recovered_data[key] = self.decode(value)
