@@ -380,6 +380,11 @@ class TestSession(SessionTestsMixin):
             "sessions": {
                 "BACKEND": "django_valkey.async_cache.cache.AsyncValkeyCache",
                 "LOCATION": "valkey://localhost:6379",
+                # A plain server, even when DJANGO_VALKEY_CONNECTION_FACTORY
+                # points every cache at sentinel.
+                "OPTIONS": {
+                    "CONNECTION_FACTORY": "django_valkey.async_cache.pool.AsyncConnectionFactory",
+                },
             },
         }
         settings.SESSION_CACHE_ALIAS = "sessions"
