@@ -10,8 +10,6 @@ from django.core.cache import caches
 from django.test import override_settings
 from django.utils import timezone
 
-from django_valkey.cache import ValkeyCache
-
 SessionType = type[SessionBase]
 
 
@@ -366,10 +364,6 @@ class TestSession(SessionTestsMixin):
         self.session.save()
         assert caches["default"].get(self.session.cache_key) is not None
 
-    @pytest.mark.skipif(
-        caches["default"].client is not ValkeyCache,
-        reason="settings is set for normal server",
-    )
     def test_non_default_cache(self, settings):
         settings.CACHES = {
             "default": {
@@ -378,6 +372,11 @@ class TestSession(SessionTestsMixin):
             "sessions": {
                 "BACKEND": "django_valkey.cache.ValkeyCache",
                 "LOCATION": "valkey://localhost:6379",
+                # A plain server, even when DJANGO_VALKEY_CONNECTION_FACTORY
+                # points every cache at sentinel.
+                "OPTIONS": {
+                    "CONNECTION_FACTORY": "django_valkey.pool.ConnectionFactory",
+                },
             },
         }
         settings.SESSION_CACHE_ALIAS = "sessions"
