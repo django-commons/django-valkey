@@ -21,6 +21,7 @@ from django_valkey.serializers.msgspec import (
     MsgSpecMsgPackSerializer,
 )
 from django_valkey.serializers.pickle import PickleSerializer
+from tests.conftest import Expiry
 
 
 @pytest.fixture
@@ -66,19 +67,19 @@ class TestDjangoValkeyCache:
         res = cache.get("test_key_nx")
         assert res is None
 
-    def test_setnx_timeout(self, cache: ValkeyCache):
+    def test_setnx_timeout(self, cache: ValkeyCache, expiry: Expiry):
         # test that timeout still works for nx=True
-        res = cache.set("test_key_nx", 1, timeout=2, nx=True)
+        res = cache.set("test_key_nx", 1, timeout=expiry.timeout, nx=True)
         assert res is True
-        time.sleep(3)
+        time.sleep(expiry.wait)
         res = cache.get("test_key_nx")
         assert res is None
 
         # test that timeout will not affect key, if it was there
         cache.set("test_key_nx", 1)
-        res = cache.set("test_key_nx", 2, timeout=2, nx=True)
+        res = cache.set("test_key_nx", 2, timeout=expiry.timeout, nx=True)
         assert res is None
-        time.sleep(3)
+        time.sleep(expiry.wait)
         res = cache.get("test_key_nx")
         assert res == 1
 
@@ -155,9 +156,17 @@ class TestDjangoValkeyCache:
         assert isinstance(res, float)
         assert res == float_val
 
-    def test_timeout(self, cache: ValkeyCache):
-        cache.set("test_key", 222, timeout=3)
-        time.sleep(4)
+    def test_timeout(self, cache: ValkeyCache, expiry: Expiry):
+        cache.set("test_key", 222, timeout=expiry.timeout)
+        time.sleep(expiry.wait)
+
+        res = cache.get("test_key")
+        assert res is None
+
+    def test_timeout_whole_seconds(self, cache: ValkeyCache):
+        cache.set("test_key", 222, timeout=1)
+        assert cache.get("test_key") == 222
+        time.sleep(1.5)
 
         res = cache.get("test_key")
         assert res is None
@@ -167,14 +176,23 @@ class TestDjangoValkeyCache:
         res = cache.get("test_key")
         assert res is None
 
-    def test_timeout_parameter_as_positional_argument(self, cache: ValkeyCache):
+    def test_fractional_timeout(self, cache: ValkeyCache):
+        cache.set("test_key", 222, timeout=0.5)
+        assert cache.get("test_key") == 222
+
+        cache.set("test_key", 222, timeout=1.5)
+        assert 1000 < cache.pttl("test_key") <= 1500
+
+    def test_timeout_parameter_as_positional_argument(
+        self, cache: ValkeyCache, expiry: Expiry
+    ):
         cache.set("test_key", 222, -1)
         res = cache.get("test_key")
         assert res is None
 
-        cache.set("test_key", 222, 1)
+        cache.set("test_key", 222, expiry.timeout)
         res1 = cache.get("test_key")
-        time.sleep(2)
+        time.sleep(expiry.wait)
         res2 = cache.get("test_key")
         assert res1 == 222
         assert res2 is None
@@ -815,12 +833,12 @@ class TestDjangoValkeyCache:
         res = cache.get("test_key")
         assert res is None
 
-    def test_touch_positive_timeout(self, cache: ValkeyCache):
+    def test_touch_positive_timeout(self, cache: ValkeyCache, expiry: Expiry):
         cache.set("test_key", 222, timeout=10)
 
-        assert cache.touch("test_key", 2) is True
+        assert cache.touch("test_key", expiry.timeout) is True
         assert cache.get("test_key") == 222
-        time.sleep(3)
+        time.sleep(expiry.wait)
         assert cache.get("test_key") is None
 
     def test_touch_negative_timeout(self, cache: ValkeyCache):
@@ -833,23 +851,23 @@ class TestDjangoValkeyCache:
     def test_touch_missed_key(self, cache: ValkeyCache):
         assert cache.touch("test_key_does_not_exist", 1) is False
 
-    def test_touch_forever(self, cache: ValkeyCache):
-        cache.set("test_key", "foo", timeout=1)
+    def test_touch_forever(self, cache: ValkeyCache, expiry: Expiry):
+        cache.set("test_key", "foo", timeout=expiry.timeout)
         result = cache.touch("test_key", None)
         assert result is True
         assert cache.ttl("test_key") is None
-        time.sleep(2)
+        time.sleep(expiry.wait)
         assert cache.get("test_key") == "foo"
 
     def test_touch_forever_nonexistent(self, cache: ValkeyCache):
         result = cache.touch("test_key_does_not_exist", None)
         assert result is False
 
-    def test_touch_default_timeout(self, cache: ValkeyCache):
-        cache.set("test_key", "foo", timeout=1)
+    def test_touch_default_timeout(self, cache: ValkeyCache, expiry: Expiry):
+        cache.set("test_key", "foo", timeout=expiry.timeout)
         result = cache.touch("test_key")
         assert result is True
-        time.sleep(2)
+        time.sleep(expiry.wait)
         assert cache.get("test_key") == "foo"
 
     def test_clear(self, cache: ValkeyCache):
