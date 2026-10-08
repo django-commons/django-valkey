@@ -83,6 +83,8 @@ the provider supplies both the username and the password, so it can't be combine
 `get_credentials()` runs on every new connection, so cache the token in the provider and refresh it shortly before it expires rather than fetching a new one each time.
 this works with every backend: the default, sentinel, cluster and async ones.
 
+for AWS ElastiCache and Google Cloud Memorystore, django-valkey ships ready-made providers, see [IAM authentication](iam_authentication.md).
+
 
 ## RESP3 support
 
