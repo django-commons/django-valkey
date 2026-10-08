@@ -276,6 +276,22 @@ class TestDjangoValkeyCache:
         res = cache.get_many(["a", "b", "c"])
         assert res == {"a": 1, "b": 2, "c": 3}
 
+    def test_set_many_timeout(self, cache: ValkeyCache):
+        cache.set_many({"a": 1, "b": 2}, timeout=10)
+        assert cache.get_many(["a", "b"]) == {"a": 1, "b": 2}
+        for key in ("a", "b"):
+            if isinstance(cache.client, herd.HerdClient):
+                assert pytest.approx(cache.ttl(key)) == 12
+            else:
+                assert pytest.approx(cache.ttl(key)) == 10
+
+        cache.set_many({"a": 1}, timeout=None)
+        assert cache.ttl("a") is None
+
+    def test_get_many_repeated_keys(self, cache: ValkeyCache):
+        cache.set_many({"a": 1, "b": 2})
+        assert cache.get_many(["a", "a", "b"]) == {"a": 1, "b": 2}
+
     def test_mset(self, cache: ValkeyCache):
         if isinstance(cache.client, (ShardClient, DefaultClusterClient)):
             pytest.skip()
