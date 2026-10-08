@@ -8,6 +8,7 @@ from django.core.cache import cache as default_cache
 from django.core.cache import caches
 from pytest import LogCaptureFixture
 from pytest_django import Settings
+from valkey.credentials import CredentialProvider
 from valkey.exceptions import ConnectionError
 
 from django_valkey.async_cache.cache import AsyncValkeyCache
@@ -277,3 +278,27 @@ async def test_custom_key_function(cache: AsyncValkeyCache, settings: Settings):
     # ensure our custom function was actually called
     client = await cache.client.get_client(write=False)
     assert {k.decode() for k in await client.keys("*")} == ({"#1#foo-bc", "#1#foo-bb"})
+
+
+class CountingCredentialProvider(CredentialProvider):
+    def __init__(self):
+        self.calls = 0
+
+    def get_credentials(self):
+        self.calls += 1
+        # The test servers have no password, and a passwordless user accepts
+        # any password, so this exercises AUTH without needing a real secret.
+        return "default", "token"
+
+
+@pytest.mark.filterwarnings("ignore:coroutine 'AsyncBackendCommands.close'")
+async def test_credential_provider(cache: AsyncValkeyCache, settings: Settings):
+    provider = CountingCredentialProvider()
+    caches_setting = copy.deepcopy(settings.CACHES)
+    caches_setting["default"].setdefault("OPTIONS", {})
+    caches_setting["default"]["OPTIONS"]["CREDENTIAL_PROVIDER"] = provider
+    settings.CACHES = caches_setting
+
+    await cache.aset("foo", "bar")
+    assert await cache.aget("foo") == "bar"
+    assert provider.calls > 0
