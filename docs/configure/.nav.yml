@@ -1,5 +1,6 @@
 nav:
   - basic_configurations.md
   - advanced_configurations.md
+  - iam_authentication.md
   - sentinel_configurations.md
   - compressors.md

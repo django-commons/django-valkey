@@ -46,6 +46,46 @@ you can specify a database number in your URL like this:
 * if using the `valkey://` scheme, the path argument of the URL, e.g. `valkey://localhost:6379/0`
 
 
+## Credential providers
+
+when the password changes over time, for example the short-lived tokens used by IAM authentication on AWS ElastiCache and Google Cloud Memorystore,
+set `CREDENTIAL_PROVIDER` to a valkey-py credential provider instead of using `PASSWORD`.
+valkey-py calls the provider's `get_credentials()` every time it opens a new connection and sends the result with `AUTH`,
+so connections that are already open keep working and new ones pick up the current credentials.
+
+```python
+from valkey.credentials import CredentialProvider
+
+
+class TokenProvider(CredentialProvider):
+    def __init__(self, username):
+        self.username = username
+
+    def get_credentials(self):
+        return self.username, get_token()  # get_token() is your own code
+```
+
+```python
+CACHES = {
+    "default": {
+        # ...
+        "OPTIONS": {
+            "CREDENTIAL_PROVIDER": "path.to.TokenProvider",
+            "CREDENTIAL_PROVIDER_KWARGS": {"username": "default"},
+        },
+    }
+}
+```
+
+a dotted path to a class is instantiated with `CREDENTIAL_PROVIDER_KWARGS`. a dotted path to anything else, such as a module-level provider instance, is used as is,
+and you can also put a provider instance in `CREDENTIAL_PROVIDER` directly.
+the provider supplies both the username and the password, so it can't be combined with `PASSWORD` or with credentials in the URL.
+`get_credentials()` runs on every new connection, so cache the token in the provider and refresh it shortly before it expires rather than fetching a new one each time.
+this works with every backend: the default, sentinel, cluster and async ones.
+
+for AWS ElastiCache and Google Cloud Memorystore, django-valkey ships ready-made providers, see [IAM authentication](iam_authentication.md).
+
+
 ## RESP3 support
 
 to enable RESP3, like other connections you can configure your server like this:
@@ -396,6 +436,10 @@ can directly customize a connection/connection pool creation for a backend.
 
 The default valkey-py behavior is to not close connections, recycling them when
 possible.
+
+Connection pools are kept for the life of the process and shared by every cache
+that uses the same connection factory, `LOCATION` and `OPTIONS`. A cache that
+changes any of those gets a pool of its own.
 
 ### Configure default connection pool
 
