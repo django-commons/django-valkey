@@ -13,7 +13,6 @@ from pytest_django import Settings
 from pytest_mock import MockerFixture
 
 from django_valkey.cache import ValkeyCache
-from django_valkey.client import ShardClient, herd
 from django_valkey.cluster_cache.client import DefaultClusterClient
 from django_valkey.serializers.json import JSONSerializer
 from django_valkey.serializers.msgpack import MSGPackSerializer
@@ -22,6 +21,7 @@ from django_valkey.serializers.msgspec import (
     MsgSpecMsgPackSerializer,
 )
 from django_valkey.serializers.pickle import PickleSerializer
+from tests.conftest import Expiry
 
 
 @pytest.fixture
@@ -36,28 +36,17 @@ def patch_itersize_setting() -> Iterable[None]:
 
 class TestDjangoValkeyCache:
     def test_set_int(self, cache: ValkeyCache):
-        if isinstance(cache.client, herd.HerdClient):
-            pytest.skip("herd client's set method works differently")
         cache.set("test_key", 1)
         result = cache.get("test_key")
         assert type(result) is int
-        # shard client doesn't have get_client()
-        if not isinstance(cache.client, ShardClient):
-            raw_client = cache.client._get_client(write=False, client=None)
-        else:
-            raw_client = cache.client._get_client(key=":1:test_key")
+        raw_client = cache.client._get_client(key=":1:test_key")
         assert raw_client.get(":1:test_key") == b"1"
 
     def test_set_float(self, cache: ValkeyCache):
-        if isinstance(cache.client, herd.HerdClient):
-            pytest.skip("herd client's set method works differently")
         cache.set("test_key2", 1.1)
         result = cache.get("test_key2")
         assert type(result) is float
-        if not isinstance(cache.client, ShardClient):
-            raw_client = cache.client._get_client(write=False, client=None)
-        else:
-            raw_client = cache.client._get_client(key=":1:test_key2")
+        raw_client = cache.client._get_client(key=":1:test_key2")
         assert raw_client.get(":1:test_key2") == b"1.1"
 
     def test_setnx(self, cache: ValkeyCache):
@@ -78,19 +67,19 @@ class TestDjangoValkeyCache:
         res = cache.get("test_key_nx")
         assert res is None
 
-    def test_setnx_timeout(self, cache: ValkeyCache):
+    def test_setnx_timeout(self, cache: ValkeyCache, expiry: Expiry):
         # test that timeout still works for nx=True
-        res = cache.set("test_key_nx", 1, timeout=2, nx=True)
+        res = cache.set("test_key_nx", 1, timeout=expiry.timeout, nx=True)
         assert res is True
-        time.sleep(3)
+        time.sleep(expiry.wait)
         res = cache.get("test_key_nx")
         assert res is None
 
         # test that timeout will not affect key, if it was there
         cache.set("test_key_nx", 1)
-        res = cache.set("test_key_nx", 2, timeout=2, nx=True)
+        res = cache.set("test_key_nx", 2, timeout=expiry.timeout, nx=True)
         assert res is None
-        time.sleep(3)
+        time.sleep(expiry.wait)
         res = cache.get("test_key_nx")
         assert res == 1
 
@@ -167,9 +156,17 @@ class TestDjangoValkeyCache:
         assert isinstance(res, float)
         assert res == float_val
 
-    def test_timeout(self, cache: ValkeyCache):
-        cache.set("test_key", 222, timeout=3)
-        time.sleep(4)
+    def test_timeout(self, cache: ValkeyCache, expiry: Expiry):
+        cache.set("test_key", 222, timeout=expiry.timeout)
+        time.sleep(expiry.wait)
+
+        res = cache.get("test_key")
+        assert res is None
+
+    def test_timeout_whole_seconds(self, cache: ValkeyCache):
+        cache.set("test_key", 222, timeout=1)
+        assert cache.get("test_key") == 222
+        time.sleep(1.5)
 
         res = cache.get("test_key")
         assert res is None
@@ -179,14 +176,23 @@ class TestDjangoValkeyCache:
         res = cache.get("test_key")
         assert res is None
 
-    def test_timeout_parameter_as_positional_argument(self, cache: ValkeyCache):
+    def test_fractional_timeout(self, cache: ValkeyCache):
+        cache.set("test_key", 222, timeout=0.5)
+        assert cache.get("test_key") == 222
+
+        cache.set("test_key", 222, timeout=1.5)
+        assert 1000 < cache.pttl("test_key") <= 1500
+
+    def test_timeout_parameter_as_positional_argument(
+        self, cache: ValkeyCache, expiry: Expiry
+    ):
         cache.set("test_key", 222, -1)
         res = cache.get("test_key")
         assert res is None
 
-        cache.set("test_key", 222, 1)
+        cache.set("test_key", 222, expiry.timeout)
         res1 = cache.get("test_key")
-        time.sleep(2)
+        time.sleep(expiry.wait)
         res2 = cache.get("test_key")
         assert res1 == 222
         assert res2 is None
@@ -243,7 +249,7 @@ class TestDjangoValkeyCache:
         assert res == {"a": 1, "b": 2, "c": 3}
 
     def test_mget(self, cache: ValkeyCache):
-        if isinstance(cache.client, (ShardClient, DefaultClusterClient)):
+        if isinstance(cache.client, DefaultClusterClient):
             pytest.skip()
         cache.set("a", 1)
         cache.set("b", 2)
@@ -261,7 +267,7 @@ class TestDjangoValkeyCache:
         assert res == {"a": "1", "ب": "2", "c": "الف"}
 
     def test_mget_unicode(self, cache: ValkeyCache):
-        if isinstance(cache.client, (ShardClient, DefaultClusterClient)):
+        if isinstance(cache.client, DefaultClusterClient):
             pytest.skip()
 
         cache.set("fooa", "1")
@@ -277,7 +283,7 @@ class TestDjangoValkeyCache:
         assert res == {"a": 1, "b": 2, "c": 3}
 
     def test_mset(self, cache: ValkeyCache):
-        if isinstance(cache.client, (ShardClient, DefaultClusterClient)):
+        if isinstance(cache.client, DefaultClusterClient):
             pytest.skip()
         cache.mset({"a": 1, "b": 2, "c": 3})
         res = cache.mget(["a", "b", "c"])
@@ -289,9 +295,6 @@ class TestDjangoValkeyCache:
         mocker: MockerFixture,
         settings: Settings,
     ):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support get_client")
-
         pipeline = cache.client.get_client(write=True).pipeline()
         key = "key"
         value = "value"
@@ -300,25 +303,13 @@ class TestDjangoValkeyCache:
 
         cache.set(key, value, client=pipeline)
 
-        if isinstance(cache.client, herd.HerdClient):
-            default_timeout = cache.client._backend.default_timeout
-            herd_timeout = (default_timeout + settings.CACHE_HERD_TIMEOUT) * 1000
-            herd_pack_value = cache.client._pack(value, default_timeout)
-            mocked_set.assert_called_once_with(
-                cache.client.make_key(key, version=None),
-                cache.client.encode(herd_pack_value),
-                nx=False,
-                px=herd_timeout,
-                xx=False,
-            )
-        else:
-            mocked_set.assert_called_once_with(
-                cache.client.make_key(key, version=None),
-                cache.client.encode(value),
-                nx=False,
-                px=cache.client._backend.default_timeout * 1000,
-                xx=False,
-            )
+        mocked_set.assert_called_once_with(
+            cache.client.make_key(key, version=None),
+            cache.client.encode(value),
+            nx=False,
+            px=cache.client._backend.default_timeout * 1000,
+            xx=False,
+        )
 
     def test_delete(self, cache: ValkeyCache):
         cache.set_many({"a": 1, "b": 2, "c": 3})
@@ -368,9 +359,6 @@ class TestDjangoValkeyCache:
         assert bool(res) is False
 
     def test_incr(self, cache: ValkeyCache):
-        if isinstance(cache.client, herd.HerdClient):
-            pytest.skip("HerdClient doesn't support incr")
-
         cache.set("num", 1)
 
         cache.incr("num")
@@ -399,9 +387,6 @@ class TestDjangoValkeyCache:
         assert res == 5
 
     def test_incr_no_timeout(self, cache: ValkeyCache):
-        if isinstance(cache.client, herd.HerdClient):
-            pytest.skip("HerdClient doesn't support incr")
-
         cache.set("num", 1, timeout=None)
 
         cache.incr("num")
@@ -430,19 +415,11 @@ class TestDjangoValkeyCache:
         assert res == 5
 
     def test_incr_error(self, cache: ValkeyCache):
-        if isinstance(cache.client, herd.HerdClient):
-            pytest.skip("HerdClient doesn't support incr")
-
         with pytest.raises(ValueError):
             # key does not exist
             cache.incr("numnum")
 
     def test_incr_ignore_check(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support argument ignore_key_check to incr")
-        if isinstance(cache.client, herd.HerdClient):
-            pytest.skip("HerdClient doesn't support incr")
-
         # key exists check will be skipped and the value will be incremented by
         # '1' which is the default delta
         cache.incr("num", ignore_key_check=True)
@@ -488,9 +465,6 @@ class TestDjangoValkeyCache:
         assert res is False
 
     def test_decr(self, cache: ValkeyCache):
-        if isinstance(cache.client, herd.HerdClient):
-            pytest.skip("HerdClient doesn't support decr")
-
         cache.set("num", 20)
 
         cache.decr("num")
@@ -637,10 +611,7 @@ class TestDjangoValkeyCache:
         cache.set("foo", "bar", 10)
         ttl = cache.ttl("foo")
 
-        if isinstance(cache.client, herd.HerdClient):
-            assert pytest.approx(ttl) == 12
-        else:
-            assert pytest.approx(ttl) == 10
+        assert pytest.approx(ttl) == 10
 
         # Test ttl None
         cache.set("foo", "foo", timeout=None)
@@ -662,19 +633,13 @@ class TestDjangoValkeyCache:
         ttl = cache.pttl("foo")
 
         # delta is set to 10 as precision error causes tests to fail
-        if isinstance(cache.client, herd.HerdClient):
-            assert pytest.approx(ttl, 10) == 12000
-        else:
-            assert pytest.approx(ttl, 10) == 10000
+        assert pytest.approx(ttl, 10) == 10000
 
         # Test pttl with float value
         cache.set("foo", "bar", 5.5)
         ttl = cache.pttl("foo")
 
-        if isinstance(cache.client, herd.HerdClient):
-            assert pytest.approx(ttl, 10) == 7500
-        else:
-            assert pytest.approx(ttl, 10) == 5500
+        assert pytest.approx(ttl, 10) == 5500
 
         # Test pttl None
         cache.set("foo", "foo", timeout=None)
@@ -816,9 +781,6 @@ class TestDjangoValkeyCache:
         assert not cache.has_key("foobar")
 
     def test_iter_keys(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support iter_keys")
-
         cache.set("foo1", 1)
         cache.set("foo2", 1)
         cache.set("foo3", 1)
@@ -828,9 +790,6 @@ class TestDjangoValkeyCache:
         assert result == {"foo1", "foo2", "foo3"}
 
     def test_iter_keys_itersize(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support iter_keys")
-
         cache.set("foo1", 1)
         cache.set("foo2", 1)
         cache.set("foo3", 1)
@@ -840,9 +799,6 @@ class TestDjangoValkeyCache:
         assert len(result) == 3
 
     def test_iter_keys_generator(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support iter_keys")
-
         cache.set("foo1", 1)
         cache.set("foo2", 1)
         cache.set("foo3", 1)
@@ -853,8 +809,6 @@ class TestDjangoValkeyCache:
         assert next_value is not None
 
     def test_primary_replica_switching(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("shard client handles connections differently")
         cache = cast(ValkeyCache, caches["sample"])
         client = cache.client
         client._server = ["foo", "bar"]
@@ -864,9 +818,6 @@ class TestDjangoValkeyCache:
         assert client.get_client(write=False) == "Bar"
 
     def test_primary_replica_switching_with_index(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support get_client")
-
         cache = cast(ValkeyCache, caches["sample"])
         client = cache.client
         client._server = ["foo", "bar"]
@@ -882,12 +833,12 @@ class TestDjangoValkeyCache:
         res = cache.get("test_key")
         assert res is None
 
-    def test_touch_positive_timeout(self, cache: ValkeyCache):
+    def test_touch_positive_timeout(self, cache: ValkeyCache, expiry: Expiry):
         cache.set("test_key", 222, timeout=10)
 
-        assert cache.touch("test_key", 2) is True
+        assert cache.touch("test_key", expiry.timeout) is True
         assert cache.get("test_key") == 222
-        time.sleep(3)
+        time.sleep(expiry.wait)
         assert cache.get("test_key") is None
 
     def test_touch_negative_timeout(self, cache: ValkeyCache):
@@ -900,23 +851,23 @@ class TestDjangoValkeyCache:
     def test_touch_missed_key(self, cache: ValkeyCache):
         assert cache.touch("test_key_does_not_exist", 1) is False
 
-    def test_touch_forever(self, cache: ValkeyCache):
-        cache.set("test_key", "foo", timeout=1)
+    def test_touch_forever(self, cache: ValkeyCache, expiry: Expiry):
+        cache.set("test_key", "foo", timeout=expiry.timeout)
         result = cache.touch("test_key", None)
         assert result is True
         assert cache.ttl("test_key") is None
-        time.sleep(2)
+        time.sleep(expiry.wait)
         assert cache.get("test_key") == "foo"
 
     def test_touch_forever_nonexistent(self, cache: ValkeyCache):
         result = cache.touch("test_key_does_not_exist", None)
         assert result is False
 
-    def test_touch_default_timeout(self, cache: ValkeyCache):
-        cache.set("test_key", "foo", timeout=1)
+    def test_touch_default_timeout(self, cache: ValkeyCache, expiry: Expiry):
+        cache.set("test_key", "foo", timeout=expiry.timeout)
         result = cache.touch("test_key")
         assert result is True
-        time.sleep(2)
+        time.sleep(expiry.wait)
         assert cache.get("test_key") == "foo"
 
     def test_clear(self, cache: ValkeyCache):
@@ -928,8 +879,6 @@ class TestDjangoValkeyCache:
         assert value_from_cache_after_clear is None
 
     def test_hset(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support hash operations")
         cache.hset("foo_hash1", "foo1", "bar1")
         cache.hset("foo_hash1", "foo2", "bar2")
         assert cache.hlen("foo_hash1") == 2
@@ -937,8 +886,6 @@ class TestDjangoValkeyCache:
         assert cache.hexists("foo_hash1", "foo2")
 
     def test_hdel(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support hash operations")
         cache.hset("foo_hash2", "foo1", "bar1")
         cache.hset("foo_hash2", "foo2", "bar2")
         assert cache.hlen("foo_hash2") == 2
@@ -949,8 +896,6 @@ class TestDjangoValkeyCache:
         assert cache.hexists("foo_hash2", "foo2")
 
     def test_hlen(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support hash operations")
         assert cache.hlen("foo_hash3") == 0
         cache.hset("foo_hash3", "foo1", "bar1")
         assert cache.hlen("foo_hash3") == 1
@@ -958,8 +903,6 @@ class TestDjangoValkeyCache:
         assert cache.hlen("foo_hash3") == 2
 
     def test_hkeys(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support hash operations")
         cache.hset("foo_hash4", "foo1", "bar1")
         cache.hset("foo_hash4", "foo2", "bar2")
         cache.hset("foo_hash4", "foo3", "bar3")
@@ -969,8 +912,6 @@ class TestDjangoValkeyCache:
             assert keys[i] == f"foo{i + 1}"
 
     def test_hexists(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support hash operations")
         cache.hset("foo_hash5", "foo1", "bar1")
         assert cache.hexists("foo_hash5", "foo1")
         assert not cache.hexists("foo_hash5", "foo")
@@ -982,19 +923,13 @@ class TestDjangoValkeyCache:
     def test_sadd_int(self, cache: ValkeyCache):
         cache.sadd("foo", 1)
         assert cache.smembers("foo") == {1}
-        if not isinstance(cache.client, ShardClient):
-            raw_client = cache.client._get_client(write=False, client=None)
-        else:
-            raw_client = cache.client._get_client(key=":1:foo")
+        raw_client = cache.client._get_client(key=":1:foo")
         assert raw_client.smembers(":1:foo") == [b"1"]
 
     def test_sadd_float(self, cache: ValkeyCache):
         cache.sadd("foo", 1.2)
         assert cache.smembers("foo") == {1.2}
-        if not isinstance(cache.client, ShardClient):
-            raw_client = cache.client._get_client(write=False, client=None)
-        else:
-            raw_client = cache.client._get_client(key=":1:foo")
+        raw_client = cache.client._get_client(key=":1:foo")
         assert raw_client.smembers(":1:foo") == [b"1.2"]
 
     def test_scard(self, cache: ValkeyCache):
@@ -1002,9 +937,6 @@ class TestDjangoValkeyCache:
         assert cache.scard("foo") == 2
 
     def test_sdiff(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support sdiff")
-
         if isinstance(cache.client, DefaultClusterClient):
             pytest.skip("cluster client has a specific test")
 
@@ -1013,9 +945,6 @@ class TestDjangoValkeyCache:
         assert cache.sdiff("foo1", "foo2") == {"bar1"}
 
     def test_sdiffstore(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support sdiffstore")
-
         if isinstance(cache.client, DefaultClusterClient):
             pytest.skip("cluster client has a specific test")
 
@@ -1025,9 +954,6 @@ class TestDjangoValkeyCache:
         assert cache.smembers("foo3") == {"bar1"}
 
     def test_sdiffstore_with_keys_version(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support sdiffstore")
-
         if isinstance(cache.client, DefaultClusterClient):
             pytest.skip("cluster client has a specific test")
 
@@ -1039,9 +965,6 @@ class TestDjangoValkeyCache:
     def test_sdiffstore_with_different_keys_versions_without_initial_set_in_version(
         self, cache: ValkeyCache
     ):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support sdiffstore")
-
         if isinstance(cache.client, DefaultClusterClient):
             pytest.skip("cluster client has a specific test")
 
@@ -1052,9 +975,6 @@ class TestDjangoValkeyCache:
     def test_sdiffstore_with_different_keys_versions_with_initial_set_in_version(
         self, cache: ValkeyCache
     ):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support sdiffstore")
-
         if isinstance(cache.client, DefaultClusterClient):
             pytest.skip("cluster client has a specific test")
 
@@ -1063,9 +983,6 @@ class TestDjangoValkeyCache:
         assert cache.sdiffstore("foo3", "foo1", "foo2", version_keys=2) == 2
 
     def test_sinter(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support sinter")
-
         if isinstance(cache.client, DefaultClusterClient):
             pytest.skip("cluster client has a specific test")
 
@@ -1074,9 +991,6 @@ class TestDjangoValkeyCache:
         assert cache.sinter("foo1", "foo2") == {"bar2"}
 
     def test_sinterstore(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support sinterstore")
-
         if isinstance(cache.client, DefaultClusterClient):
             pytest.skip("cluster client has a specific test")
 
@@ -1179,9 +1093,6 @@ class TestDjangoValkeyCache:
         assert cache.sismember("foo", False) is False
 
     def test_smove(self, cache: ValkeyCache):
-        # if isinstance(cache.client, ShardClient):
-        #     pytest.skip("ShardClient doesn't support get_client")
-
         if isinstance(cache.client, DefaultClusterClient):
             pytest.skip("cluster client has a specific test")
 
@@ -1246,9 +1157,6 @@ class TestDjangoValkeyCache:
         assert cache.smismember("foo", "bar1", "bar2", "xyz") == [True, True, False]
 
     def test_sunion(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support sunion")
-
         if isinstance(cache.client, DefaultClusterClient):
             pytest.skip("cluster client has a specific test")
 
@@ -1257,9 +1165,6 @@ class TestDjangoValkeyCache:
         assert cache.sunion("foo1", "foo2") == {"bar1", "bar2", "bar3"}
 
     def test_sunionstore(self, cache: ValkeyCache):
-        if isinstance(cache.client, ShardClient):
-            pytest.skip("ShardClient doesn't support sunionstore")
-
         if isinstance(cache.client, DefaultClusterClient):
             pytest.skip("cluster client has a specific test")
 

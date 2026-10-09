@@ -1,3 +1,5 @@
+from warnings import warn
+
 from valkey import Valkey
 from valkey.typing import EncodableT, KeyT
 
@@ -11,6 +13,12 @@ from django_valkey.exceptions import ConnectionInterrupted
 
 
 class AsyncHerdClient(HerdCommonMethods, AsyncDefaultClient):
+    def __init__(self, *args, **kwargs):
+        warn(
+            "`AsyncHerdClient` is not supported, it is not planned to be removed but won't be tested or supported"
+        )
+        super().__init__(*args, **kwargs)
+
     async def set(
         self,
         key: KeyT,

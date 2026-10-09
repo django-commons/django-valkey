@@ -1453,7 +1453,7 @@ class AsyncClientCommands(Generic[Backend]):
 
                 if timeout is not None:
                     # convert to milliseconds
-                    timeout = int(timeout) * 1000
+                    timeout = int(timeout * 1000)
 
                     if timeout <= 0:
                         if nx:

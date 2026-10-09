@@ -201,6 +201,3 @@ if the commands provided by django-valkey backend is not enough, or you want to 
 >>> con
 <valkey.client.Valkey object at 0x2dc4510>
 ```
-
-**Warning**: not all clients support this feature:
-ShardClient will raise an exception if tried to be used like this.

@@ -2,16 +2,19 @@
 
 a sentinel configuration has these parts:
 
-1. `DJANGO_VALKEY_CONNECTION_FACTORY`: you can use the ConnectionFactory or SentinelConnectionFactory. the sentinel client uses SentinelConnectionFactory by default.
-   SentinelConnectionFactory inherits from ConnectionFactory but adds checks to see if configuration is correct, also adds features to make configuration more robust.
+1. `DJANGO_VALKEY_CONNECTION_FACTORY`: you can use the AsyncConnectionFactory or AsyncSentinelConnectionFactory.
+   the sentinel client uses AsyncSentinelConnectionFactory by default.
+   AsyncSentinelConnectionFactory inherits from ConnectionFactory but adds checks to see if configuration is correct,
+   also adds features to make configuration more robust.
 
 2. `CACHES["default"]["OPTIONS"]["CONNECTION_FACTORY"]`: does what the above option does, but only in the scope of the cache server it was defined in.
 
-3. `CACHES["default"]["OPTIONS"]["CLIENT_CLASS"]`: setting the client class to SentinelClient will add some checks to ensure proper
+3. `CACHES["default"]["OPTIONS"]["CLIENT_CLASS"]`: setting the client class to AsyncSentinelClient will add some checks to ensure proper
    configs and makes working with primary and replica pools easier
    you can get by just using the DefaultClient but using SentinelClient is recommended.
+
 4. `CACHES["default"]["OPTIONS"]["CONNECTION_POOL_CLASS"]`: if you have configured the above settings to use Sentinel friendly options you don't have to set this,
-   otherwise you might want to set this to `valkey.sentinel.SentinelConnectionPool`.
+   otherwise you might want to set this to `valkey.asyncio.sentinel.SentinelConnectionPool`.
 
 5. `CACHES["default"]["OPTIONS"]["SENTINELS"]`: a list of (host, port) providing the sentinel's connection information.
 
@@ -21,7 +24,7 @@ the below code is a bit long but comprehensive example of different ways to conf
 *Note* that depending on how you configured your backend, you might need to adjust the `LOCATION` to fit other configs
 
 ```python
-DJANGO_VALKEY_CONNECTION_FACTORY = "django_valkey.pool.SentinelConnectionFactory"
+DJANGO_VALKEY_CONNECTION_FACTORY = "django_valkey.async_cache.pool.AsyncSentinelConnectionFactory"
 
 # SENTINELS is a list of (host name, port) tuples
 # These sentinels are shared between all the examples, and are passed
@@ -37,11 +40,11 @@ CACHES = {
     # ...
     "LOCATION": "valkey://service_name/db",  # note you should pass in valkey service name, not address
     "OPTIONS": {
-        # While the `DefaultClient` will work, this will check you
+        # While the `DefaultClient` will work as well, this will check you
         # have configured things correctly, and also create a
         # primary and replica pool for the service specified by
         # LOCATION rather than requiring two URLs.
-        "CLIENT_CLASS": "django_valkey.client.SentinelClient",
+        "CLIENT_CLASS": "django_valkey.async_cache.client.AsyncSentinelClient",
 
         # these are passed directly to valkey sentinel
         "SENTINELS": SENTINELS,
@@ -51,24 +54,24 @@ CACHES = {
 
         # you can override the connection pool (optional)
         # (it is the default in connection factory)
-        "CONNECTION_POOL_CLASS": "valkey.sentinel.SentinelConnectionPool",
+        "CONNECTION_POOL_CLASS": "valkey.asyncio.sentinel.SentinelConnectionPool"
         },
     },
 
     # a minimal example using the SentinelClient
     "minimal": {
-        "BACKEND": "django_valkey.cache.ValkeyCache",
+        "BACKEND": "django_valkey.async_cache.cache.AsyncValkeyCache",
         "LOCATION": "valkey://minimal_service_name/db",
 
         "OPTIONS": {
-            "CLIENT_CLASS": "django_valkey.client.SentinelClient",
-            "SENTINELS": SENTINELS,
+        "CLIENT_CLASS": "django_valkey.async_cache.client.AsyncSentinelClient",
+        "SENTINELS": SENTINELS,
             },
         },
 
     # a minimal example using the DefaultClient
     "other": {
-        "BACKEND": "django_valkey.cache.ValkeyCache",
+        "BACKEND": "django_valkey.async_cache.cache.AsyncValkeyCache",
         "LOCATION": [
             # The DefaultClient is [primary, replicas], but with the
             # SentinelConnectionPool it only requires "is_master=1" for primary and "is_master=0" for replicas.
@@ -81,7 +84,7 @@ CACHES = {
     # a minimal example only using replicas in read only mode
     # (and the DefaultClient).
     "readonly": {
-        "BACKEND": "django_valkey.cache.ValkeyCache",
+        "BACKEND": "django_valkey.async_cache.cache.AsyncValkeyCache",
         "LOCATION": "valkey://readonly_service_name/db?is_master=0",
         "OPTIONS": {"SENTINELS": SENTINELS},
      },
@@ -100,13 +103,13 @@ SENTINELS = [
 ]
 CACHES = {
     "sentinel": {
-        "BACKEND": "django_valkey.cache.ValkeyCache",
+        "BACKEND": "django_valkey.async_cache.cache.AsyncValkeyCache",
         "LOCATION": "valkey://service_name/db",
         "OPTIONS": {
-            "CLIENT_CLASS": "django_valkey.client.SentinelClient",
+            "CLIENT_CLASS": "django_valkey.async_cache.client.AsyncSentinelClient",
             "SENTINELS": SENTINELS,
-            "CONNECTION_POOL_CLASS": "valkey.sentinel.SentinelConnectionPool",
-            "CONNECTION_FACTORY": "django_valkey.pool.SentinelConnectionFactory",
+            "CONNECTION_POOL_CLASS": "valkey.asyncio.sentinel.SentinelConnectionPool"
+            "CONNECTION_FACTORY": "django_valkey.async_cache.pool.AsyncSentinelConnectionFactory",
         },
     },
     "default": {
@@ -118,3 +121,4 @@ CACHES = {
     },
 }
 ```
+
