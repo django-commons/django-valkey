@@ -119,8 +119,12 @@ you can change this behaviour by setting `DJANGO_VALKEY_CONNECTION_FACTORY` in y
 
 ### Use Shard client
 
+!!! warning
+
+    Shard Client is not longer supported, it will remain in the codebase but will get no updates or support of any kind.
+    consider using sentinel or cluster clients instead.
+
 this pluggable client implements client-side sharding. to use it, change you cache settings to look like this:
-*WARNING*: sharded client is experimental
 
 ```python
 CACHE = {
@@ -136,6 +140,10 @@ CACHE = {
 ```
 
 ### Use Herd client
+
+!!! warning
+
+    Herd Client is not longer supported, it will remain in the codebase but will get no updates or support of any kind.
 
 This pluggable client help dealing with the thundering herd problem. you can read more about it on [Wikipedia](https://en.wikipedia.org/wiki/Thundering_herd_problem)
 to use this client change your configs to look like this:

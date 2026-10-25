@@ -24,7 +24,7 @@ class ConnectionFactory(BaseConnectionFactory[Valkey, ConnectionPool]):
         """
         connection.connection_pool.disconnect()
 
-    def get_parser_cls(self) -> type[DefaultParser] | type:
+    def get_parser_cls(self) -> "type[DefaultParser] | type":
         cls = self.options.get("PARSER_CLASS", None)
         if cls is None:
             return DefaultParser

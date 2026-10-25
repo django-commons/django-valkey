@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import AsyncIterable
 
 import pytest
 from django.core.cache import DEFAULT_CACHE_ALIAS
@@ -12,7 +12,7 @@ pytestmark = pytest.mark.anyio
 
 
 @pytest.fixture
-async def cache_client(cache: AsyncValkeyCache) -> Iterable[AsyncDefaultClient]:
+async def cache_client(cache: AsyncValkeyCache) -> AsyncIterable[AsyncDefaultClient]:
     client = cache.client
     await client.aset("TestClientClose", 0)
     yield client

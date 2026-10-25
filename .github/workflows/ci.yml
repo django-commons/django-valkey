@@ -102,19 +102,16 @@ jobs:
       - name: Run tests
         run: |
           uv run pytest tests/*.py --ds=tests.settings.sqlite -x
-          uv run pytest tests/*.py --ds=tests.settings.sqlite_herd -x
           uv run pytest tests/*.py --ds=tests.settings.sqlite_json -x
           uv run pytest tests/*.py --ds=tests.settings.sqlite_msgspec_json -x
           uv run pytest tests/*.py --ds=tests.settings.sqlite_msgspec_msgpack -x
           uv run pytest tests/*.py --ds=tests.settings.sqlite_msgpack -x
           uv run pytest tests/*.py --ds=tests.settings.sqlite_sentinel -x
           uv run pytest tests/*.py --ds=tests.settings.sqlite_sentinel_opts -x
-          uv run pytest tests/*.py --ds=tests.settings.sqlite_sharding -x
           uv run pytest tests/*.py --ds=tests.settings.sqlite_zlib -x
           uv run pytest tests/*.py --ds=tests.settings.sqlite_zstd -x
           uv run pytest tests/*.py --ds=tests.settings.sqlite_gzip -x
           uv run pytest tests/*.py --ds=tests.settings.sqlite_bz2 -x
           uv run pytest tests/tests_async/*.py --ds=tests.settings.sqlite_async -x
-          uv run pytest tests/tests_async/*.py --ds=tests.settings.sqlite_async_herd -x
           uv run pytest tests/*.py tests/tests_cluster --ds=tests.settings.sqlite_cluster -x
 #          uv run pytest tests/*.py --ds=tests.settings.sqlite_usock -x

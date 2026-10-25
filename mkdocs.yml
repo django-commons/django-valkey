@@ -13,6 +13,8 @@ markdown_extensions:
       base_path: ["."]
   - pymdownx.inlinehilite
   - pymdownx.superfences
+  - admonition
+  - pymdownx.details
 
 plugins:
   - awesome-nav

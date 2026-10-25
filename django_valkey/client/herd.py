@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 from typing import Any
+from warnings import warn
 
 from valkey import Valkey
 from valkey.typing import EncodableT, KeyT
@@ -15,6 +16,12 @@ from django_valkey.exceptions import ConnectionInterrupted
 
 
 class HerdClient(HerdCommonMethods, DefaultClient):
+    def __init__(self, *args, **kwargs):
+        warn(
+            "`HerdClient` is not supported, it is not planned to be removed but won't be tested or supported"
+        )
+        super().__init__(*args, **kwargs)
+
     def set(
         self,
         key: KeyT,
