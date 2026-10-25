@@ -1,6 +1,6 @@
 import copy
 from collections.abc import Iterable
-from typing import cast
+from typing import NamedTuple, cast
 
 import pytest
 from asgiref.compatibility import iscoroutinefunction
@@ -26,6 +26,23 @@ else:
     def cache() -> Iterable[BaseValkeyCache]:
         yield default_cache
         default_cache.clear()
+
+
+class Expiry(NamedTuple):
+    timeout: float
+    wait: float
+
+
+@pytest.fixture
+def expiry() -> Expiry:
+    """
+    A short timeout for tests that wait for a key to expire, and how long to
+    wait for it to pass.
+
+    Timeouts reach the server in milliseconds, so expiry can be tested in well
+    under a second. test_timeout_whole_seconds covers a whole-second timeout.
+    """
+    return Expiry(timeout=0.25, wait=0.5)
 
 
 @pytest.fixture
