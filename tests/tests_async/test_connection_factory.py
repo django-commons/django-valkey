@@ -1,5 +1,7 @@
 import pytest
 from django.core.exceptions import ImproperlyConfigured
+from valkey.asyncio.connection import ConnectionPool as AsyncConnectionPool
+from valkey.connection import ConnectionPool
 
 from django_valkey import pool as sync_pool
 from django_valkey.async_cache import pool
@@ -72,3 +74,11 @@ async def test_connection_factory_no_sentinels():
                 "CONNECTION_FACTORY": "django_valkey.async_cache.pool.AsyncSentinelConnectionFactory",
             },
         )
+
+
+async def test_sync_and_async_factories_do_not_share_pools():
+    url = "valkey://127.0.0.1:6379/0"
+    sync_client = sync_pool.ConnectionFactory({}).connect(url)
+    async_client = await pool.AsyncConnectionFactory({}).connect(url)
+    assert isinstance(sync_client.connection_pool, ConnectionPool)
+    assert isinstance(async_client.connection_pool, AsyncConnectionPool)

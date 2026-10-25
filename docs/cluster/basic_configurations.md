@@ -19,6 +19,10 @@ CACHES = {
 
 you need to point to at least one of the cluster nodes in `LOCATION`, or pass a list of multiple nodes
 
+valkey-py's `ValkeyCluster` creates a connection pool for each node it talks to. `CONNECTION_POOL_CLASS` and `CONNECTION_POOL_KWARGS` configure those per-node pools,
+and `PASSWORD`, `CREDENTIAL_PROVIDER`, `SOCKET_TIMEOUT` and `SOCKET_CONNECT_TIMEOUT` apply to their connections, the same as with the default backend.
+`BASE_CLIENT_KWARGS` is passed to `ValkeyCluster` itself, which is the place for cluster options such as `read_from_replicas`; if a key is set in both, `BASE_CLIENT_KWARGS` wins.
+
 at the moment, only one client is available for cluster backend
 
 most of the configurations you see in [basic configuration](../configure/basic_configurations.md) and [advanced configuration](../configure/advanced_configurations.md)
