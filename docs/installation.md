@@ -48,6 +48,22 @@ pip install django-valkey[zstd]  # only needed before python 3.14
 pip install django-valkey[brotli]
 ```   
 
+## Install with cloud IAM authentication:
+
+see [IAM authentication](configure/iam_authentication.md) for how to configure these.
+
+### AWS ElastiCache:
+
+```shell
+pip install django-valkey[aws]
+```
+
+### Google Cloud Memorystore:
+
+```shell
+pip install django-valkey[gcp]
+```
+
 ## Coming from django-redis?
 
 check out our migration guide [Migration from django-redis](migration_from_django_redis.md)

@@ -107,6 +107,16 @@ Install with 3rd party serializers
 
    python -m pip install django-valkey[msgspec]
 
+Install with IAM authentication for AWS ElastiCache or Google Cloud Memorystore
+
+.. code-block:: console
+
+   python -m pip install django-valkey[aws]
+
+.. code-block:: console
+
+   python -m pip install django-valkey[gcp]
+
 
 
 
