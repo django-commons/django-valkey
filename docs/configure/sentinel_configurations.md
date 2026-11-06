@@ -7,9 +7,11 @@ a sentinel configuration has these parts:
 
 2. `CACHES["default"]["OPTIONS"]["CONNECTION_FACTORY"]`: does what the above option does, but only in the scope of the cache server it was defined in.
 
-3. `CACHES["default"]["OPTIONS"]["CLIENT_CLASS"]`: setting the client class to SentinelClient will add some checks to ensure proper configs and makes working with primary and replica pools easier
+3. `CACHES["default"]["OPTIONS"]["CLIENT_CLASS"]`: setting the client class to SentinelClient will add some checks to ensure proper
+   configs and makes working with primary and replica pools easier
    you can get by just using the DefaultClient but using SentinelClient is recommended.
-4. `CACHES["default"]["OPTIONS"]["CONNECTION_POOL_CLASS"]`: if you have configured the above settings to use Sentinel friendly options you don't have to set this, otherwise you might want to set this to `valkey.sentinel.SentinelConnectionPool`.
+4. `CACHES["default"]["OPTIONS"]["CONNECTION_POOL_CLASS"]`: if you have configured the above settings to use Sentinel friendly options you don't have to set this,
+   otherwise you might want to set this to `valkey.sentinel.SentinelConnectionPool`.
 
 5. `CACHES["default"]["OPTIONS"]["SENTINELS"]`: a list of (host, port) providing the sentinel's connection information.
 
@@ -35,7 +37,7 @@ CACHES = {
     # ...
     "LOCATION": "valkey://service_name/db",  # note you should pass in valkey service name, not address
     "OPTIONS": {
-        # While the default client will work, this will check you
+        # While the `DefaultClient` will work, this will check you
         # have configured things correctly, and also create a
         # primary and replica pool for the service specified by
         # LOCATION rather than requiring two URLs.
@@ -48,7 +50,7 @@ CACHES = {
         "SENTINEL_KWARGS": {},
 
         # you can override the connection pool (optional)
-        # (it is originally defined in connection factory)
+        # (it is the default in connection factory)
         "CONNECTION_POOL_CLASS": "valkey.sentinel.SentinelConnectionPool",
         },
     },

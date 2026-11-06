@@ -1,5 +1,4 @@
 from collections.abc import Iterable
-from typing import ClassVar
 
 import pytest
 from django.core.cache import DEFAULT_CACHE_ALIAS
@@ -8,7 +7,7 @@ from pytest_django import Settings
 from pytest_mock import MockerFixture
 
 from django_valkey.cache import ValkeyCache
-from django_valkey.client import DefaultClient, ShardClient
+from django_valkey.client import DefaultClient
 
 
 @pytest.fixture
@@ -142,123 +141,3 @@ class TestDefaultClient:
             [mocker.call(":1:foo"), mocker.call(":1:foo-a")]
         )
         get_client_mock.return_value.pipeline.return_value.execute.assert_called_once()
-
-
-@pytest.mark.skipif(
-    not isinstance(default_cache.client, ShardClient), reason="shard only test"
-)
-class TestShardClient:
-    CLIENT_METHODS_FOR_MOCK: ClassVar[set[str]] = {
-        "add",
-        "close",
-        "expire",
-        "get",
-        "ttl",
-        "touch",
-        "sadd",
-        "scan_iter",
-        "spop",
-    }
-
-    @pytest.fixture
-    def shard_cache(self):
-        from django.core.cache import ConnectionProxy, caches
-
-        cache = ConnectionProxy(caches, "default")
-        yield cache
-        cache.clear()
-
-    @pytest.fixture
-    def connection(self, mocker):
-        connection = mocker.Mock()
-
-        for m in self.CLIENT_METHODS_FOR_MOCK:
-            setattr(connection, m, mocker.Mock(spec_set=()))
-
-        connection.scan_iter.return_value = []
-        connection.get.return_value = "this"
-        connection.add.return_value = True
-        connection.expire.return_value = False
-        connection.close.return_value = None
-        connection.ttl.return_value = 0
-        connection.touch.return_value = True
-        connection.sadd.return_value = 1
-        connection.spop.return_value = {"this"}
-
-        yield connection
-
-    def test_delete_pattern_calls_scan_iter_with_count_if_itersize_given(
-        self, connection, mocker
-    ):
-        mocker.patch(
-            "django_valkey.client.sharded.ShardClient.__init__", return_value=None
-        )
-        make_pattern_mock = mocker.patch(
-            "django_valkey.base_client.BaseClient.make_pattern"
-        )
-        client = ShardClient()
-        client._backend = mocker.Mock()
-        client._backend.key_prefix = ""
-
-        client._server_dict = {"test": connection}
-
-        client.delete_pattern(pattern="foo*", itersize=10)
-
-        connection.scan_iter.assert_called_once_with(
-            count=10, match=make_pattern_mock.return_value
-        )
-
-    def test_delete_pattern_calls_scan_iter(self, connection, mocker):
-        mocker.patch(
-            "django_valkey.client.sharded.ShardClient.__init__", return_value=None
-        )
-        make_pattern_mock = mocker.patch(
-            "django_valkey.base_client.BaseClient.make_pattern"
-        )
-        client = ShardClient()
-        client._backend = mocker.Mock()
-        client._backend.key_prefix = ""
-        client._server_dict = {"test": connection}
-
-        client.delete_pattern(pattern="foo*")
-
-        connection.scan_iter.assert_called_once_with(
-            match=make_pattern_mock.return_value
-        )
-
-    def test_delete_pattern_calls_delete_for_given_keys(
-        self, connection, cache, mocker
-    ):
-        mocker.patch(
-            "django_valkey.client.sharded.ShardClient.__init__", return_value=None
-        )
-        mocker.patch("django_valkey.base_client.BaseClient.make_pattern")
-        client = ShardClient()
-        client._backend = mocker.Mock()
-        client._backend.key_prefix = ""
-        connection.scan_iter.return_value = [mocker.Mock(), mocker.Mock()]
-        connection.delete.return_value = 0
-        client._server_dict = {"test": connection}
-
-        client.delete_pattern(pattern="foo*")
-
-        connection.delete.assert_called_once_with(*connection.scan_iter.return_value)
-
-    def test_shard_client_get_server_name_is_called(
-        self, mocker, connection, shard_cache
-    ):
-        if not isinstance(shard_cache.client, ShardClient):
-            pytest.skip("shard only test")
-        client = ShardClient(
-            server=shard_cache._server, params=shard_cache._params, backend=shard_cache
-        )
-        spy = mocker.spy(client, "get_server_name")
-
-        client.add("that", "this")
-        client.get("that")
-        client.ttl("that")
-        client.expire("that", 1)
-        client.touch("that")
-        client.sadd("key", "value1", "value2")
-        client.spop("key")
-        assert spy.call_count == 7

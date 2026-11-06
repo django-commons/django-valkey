@@ -11,15 +11,16 @@ this project was initially a fork of the wonderful `django-redis` project.
 1. Uses native valkey-py url notation connection strings
 2. Pluggable clients:
     1. Default Client
-    2. Herd Client
-    3. Sentinel Client
-    4. Sharded Client
-    5. Async client
+    2. Sentinel Client
+    3. Async Client
+    4. Async Sentinel Client
+    5. Cluster Client
     6. or just plug in your own client
 3. Pluggable serializers:
     1. Pickle Serializer
     2. Json Serializer
     3. msgpack serializer
+    4. msgspec serializers (json and msgpack)
     4. or plug in your own serializer
 4. Pluggable compression:
     1. brotli compression

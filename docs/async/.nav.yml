@@ -1,6 +1,7 @@
 nav:
   - configurations.md
   - advanced_configurations.md
+  - sentinel_configurations.md
   - async_commands.md
   - raw_access.md
   - access_to_pool.md
