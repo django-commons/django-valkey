@@ -286,10 +286,7 @@ class TestDjangoValkeyCache:
         cache.set_many({"a": 1, "b": 2}, timeout=10)
         assert cache.get_many(["a", "b"]) == {"a": 1, "b": 2}
         for key in ("a", "b"):
-            if isinstance(cache.client, herd.HerdClient):
-                assert pytest.approx(cache.ttl(key)) == 12
-            else:
-                assert pytest.approx(cache.ttl(key)) == 10
+            assert pytest.approx(cache.ttl(key)) == 10
 
         cache.set_many({"a": 1}, timeout=None)
         assert cache.ttl("a") is None
