@@ -25,8 +25,12 @@ class ClusterConnectionFactory(BaseConnectionFactory[ValkeyCluster, ConnectionPo
         return self.get_connection(params)
 
     def get_connection(self, params: dict) -> ValkeyCluster | Any:
-        return self.base_client_cls(
-            url=params["url"],
-            parser_class=params["parser_class"],
+        # ValkeyCluster builds a connection pool per node, so the pool class
+        # and pool kwargs are handed to it along with the connection params.
+        kwargs = {
+            **params,
+            "connection_pool_class": self.pool_cls,
+            **self.pool_cls_kwargs,
             **self.base_client_cls_kwargs,
-        )
+        }
+        return self.base_client_cls(**kwargs)
