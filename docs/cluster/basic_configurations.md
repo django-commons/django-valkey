@@ -45,9 +45,9 @@ there are some other info in their documentations that might be of interest to y
 ## Additional methods
 in addition to what other `django-valkey` clients provide, cluster client supports the following methods:
 
-* mset_nonatomic (like `set_many`, but without a timeout)
+* mset_nonatomic
 * msetnx
-* mget_nonatomic (same as `get_many`)
+* mget_nonatomic
 * readonly
 * readwrite
 * keyslot
