@@ -156,7 +156,8 @@ class BaseConnectionFactory(Generic[Base, Pool]):
         Reimplement this method if you want distinct
         connection pool instance caching behavior.
         """
-        key = (type(self), params["url"], freeze_options(self.options))
+        # TODO: move to alias when django#20469 is merged
+        key = (type(self), params["url"], freeze_options(self.options)) 
         if key not in self._pools:
             self._pools[key] = self.get_connection_pool(params)
         return self._pools[key]
