@@ -111,3 +111,26 @@ CACHES = {
 `SOCKET_CONNECT_TIMEOUT` is the timeout for the connection to be established
 and `SOCKET_TIMEOUT` is the timeout for read and write operations after the
 connection is established.
+
+## Simple Cache
+`SimpleCache` is a minimal backend that doesn't have the options the other backends provide, nor does it have all the methods the others have.
+
+to use `SimpleCache`, adjust your configuration like this:
+
+```python
+CACHES = {
+    "default": {
+        "BACKEND": "django_valkey.simple_cache.SimpleCache",
+        "LOCATION": "valkey://127.0.0.1:6379",
+        "OPTIONS": {...},
+    }
+}
+```
+
+
+all data is serialized using `pickle`.
+by default all the serialized data is compressed using zstd (python3.14 and newer) or gzip (older python).
+you can change that by specifying `COMPRESS=False` in `OPTIONS`.
+
+anything else in `OPTIONS` will be passed to valkey-py's connection pool class (`ConnectionPool`).
+
