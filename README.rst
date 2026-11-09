@@ -51,8 +51,8 @@ Why use django-valkey?
 Requirements
 ~~~~~~~~~~~~
 
-- `Python`_ 3.10+
-- `Django`_ 5.2+ (Django 4.2, 5.0 and 5.1 are end of life: https://endoflife.date/django)
+- `Python`_ 3.11+
+- `Django`_ 5.2+
 - `valkey-py`_ 6.0.2+
 - `Valkey server`_ 7.2.6+
 

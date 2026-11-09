@@ -1,3 +1,21 @@
+Version 0.5.0
+-------------
+### new
+- added SimpleCache backend
+- add support for credential provider 
+- cluster set_many now has a timeout parameter
+
+### Breaking changes
+- drop django 4.2
+- drop python 3.10
+
+### deprecation
+- mark herd backend as unsupported
+- mark shared backend as unsupported
+
+### bug fix
+- fix sentinel primary pool selection
+
 Version 0.4.1
 -------------
 
