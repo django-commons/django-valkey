@@ -10,7 +10,7 @@ readme = "README.rst"
 requires-python = ">=3.10"
 license = "BSD-3-Clause"
 maintainers = [
-    {name = "amirreza",email = "amir.rsf1380@gmail.com"},
+    {name = "amirreza sohrabi far",email = "amir.rsf1380@gmail.com"},
 ]
 classifiers = [
     "Programming Language :: Python",
